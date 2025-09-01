@@ -32,6 +32,10 @@ body {
     padding: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     align-items: center;
+    height: 66px;
+    min-height: 66px;
+    max-height: 66px;
+    overflow: hidden;
 }
 
 #wordInput {
@@ -42,6 +46,16 @@ body {
     font-size: 18px;
     outline: none;
     color: #333;
+    height: 50px;
+    min-height: 50px;
+    max-height: 50px;
+    overflow: hidden;
+    resize: none;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: top;
+    box-sizing: border-box;
 }
 
 #wordInput::placeholder {
