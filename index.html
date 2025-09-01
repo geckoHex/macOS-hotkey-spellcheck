@@ -8,50 +8,22 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📝 Spell Checker</h1>
-            <p>Check the spelling of individual words</p>
-        </header>
-
         <main>
             <div class="input-section">
                 <div class="input-group">
                     <input 
                         type="text" 
                         id="wordInput" 
-                        placeholder="Enter a word to check..."
+                        placeholder="Type a word..."
                         autocomplete="off"
                         spellcheck="false"
                     >
-                    <button id="checkBtn" class="btn-primary">Check</button>
-                </div>
-                
-                <div class="clipboard-section">
-                    <button id="pasteBtn" class="btn-secondary">
-                        📋 Paste from Clipboard
-                    </button>
+                    <button id="checkBtn" class="btn-arrow">→</button>
                 </div>
             </div>
 
             <div id="result" class="result-section hidden">
                 <div id="resultContent"></div>
-            </div>
-
-            <div class="instructions">
-                <h3>Features:</h3>
-                <ul>
-                    <li>✅ Custom spell checking</li>
-                    <li>✅ Word correction suggestions</li>
-                    <li>✅ Clipboard integration</li>
-                    <li>✅ Cross-platform compatibility</li>
-                </ul>
-                
-                <h3>How to use:</h3>
-                <ul>
-                    <li>Type a single word in the input field</li>
-                    <li>Click "Check" or press Enter</li>
-                    <li>Or paste a word from your clipboard</li>
-                </ul>
             </div>
         </main>
     </div>
