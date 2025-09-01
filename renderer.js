@@ -16,6 +16,21 @@ wordInput.addEventListener('keypress', (e) => {
     }
 });
 
+// Handle global escape key to close and reset
+document.addEventListener('keydown', async (e) => {
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        // Reset the UI
+        wordInput.value = '';
+        resetButton();
+        result.classList.add('hidden');
+        selectedSuggestionIndex = -1;
+        // Hide the window
+        await window.electronAPI.hideWindow();
+        return;
+    }
+});
+
 // Handle keyboard navigation for suggestions
 wordInput.addEventListener('keydown', (e) => {
     const suggestionItems = document.querySelectorAll('.suggestion-item');
@@ -85,21 +100,28 @@ async function selectSuggestion(suggestionElement) {
         suggestionElement.style.backgroundColor = '#d4edda';
         suggestionElement.style.color = '#155724';
         
-        // Reset visual feedback after a short delay
-        setTimeout(() => {
-            suggestionElement.textContent = originalText;
-            suggestionElement.style.backgroundColor = '';
-            suggestionElement.style.color = '';
-        }, 1000);
+        // Auto-dismiss window after a short delay to show the feedback
+        setTimeout(async () => {
+            // Reset the UI
+            wordInput.value = '';
+            resetButton();
+            result.classList.add('hidden');
+            selectedSuggestionIndex = -1;
+            // Hide the window
+            await window.electronAPI.hideWindow();
+        }, 500);
         
     } catch (error) {
         console.error('Failed to copy to clipboard:', error);
+        // Even if clipboard fails, still auto-dismiss
+        setTimeout(async () => {
+            wordInput.value = '';
+            resetButton();
+            result.classList.add('hidden');
+            selectedSuggestionIndex = -1;
+            await window.electronAPI.hideWindow();
+        }, 500);
     }
-    
-    // Also set the input value and check spelling as before
-    wordInput.value = suggestionText;
-    selectedSuggestionIndex = -1; // Reset selection
-    checkSpelling();
 }
 
 // Function to update visual selection of suggestions
@@ -197,4 +219,17 @@ function showIncorrectResult(word, suggestionsList) {
 
 window.addEventListener('DOMContentLoaded', () => {
     wordInput.focus();
+    
+    // Listen for focus events from main process
+    window.electronAPI.onFocusInput(() => {
+        // Reset UI when window is shown
+        wordInput.value = '';
+        resetButton();
+        result.classList.add('hidden');
+        selectedSuggestionIndex = -1;
+        // Focus the input
+        setTimeout(() => {
+            wordInput.focus();
+        }, 100);
+    });
 });

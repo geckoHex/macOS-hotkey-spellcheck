@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, clipboard } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, globalShortcut } = require('electron');
 const path = require('path');
 const nspell = require('nspell');
 const fs = require('fs');
@@ -59,8 +59,13 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       spellcheck: false
     },
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
     resizable: false,
-    titleBarStyle: 'default',
+    skipTaskbar: true,
+    show: false,
+    focusable: true,
     title: 'Spell Checker'
   });
 
@@ -72,7 +77,40 @@ function createWindow() {
 }
 
 // This method will be called when Electron has finished initialization
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  
+  // Register global shortcut
+  const ret = globalShortcut.register('Shift+Control+Option+Command+O', () => {
+    if (mainWindow) {
+      if (mainWindow.isVisible()) {
+        mainWindow.hide();
+      } else {
+        // Center the window on screen
+        const { screen } = require('electron');
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const { width, height } = primaryDisplay.workAreaSize;
+        const windowWidth = 600;
+        const windowHeight = 500;
+        
+        mainWindow.setBounds({
+          x: Math.round((width - windowWidth) / 2),
+          y: Math.round((height - windowHeight) / 2),
+          width: windowWidth,
+          height: windowHeight
+        });
+        
+        mainWindow.show();
+        mainWindow.focus();
+        mainWindow.webContents.send('focus-input');
+      }
+    }
+  });
+
+  if (!ret) {
+    console.log('Registration of global shortcut failed');
+  }
+});
 
 // Quit when all windows are closed
 app.on('window-all-closed', () => {
@@ -85,6 +123,11 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+app.on('will-quit', () => {
+  // Unregister all shortcuts
+  globalShortcut.unregisterAll();
 });
 
 // IPC handlers
@@ -151,5 +194,11 @@ ipcMain.handle('set-clipboard', async (event, text) => {
     return true;
   } catch (error) {
     return false;
+  }
+});
+
+ipcMain.handle('hide-window', async () => {
+  if (mainWindow) {
+    mainWindow.hide();
   }
 });
