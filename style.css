@@ -36,11 +36,13 @@ body {
     min-height: 66px;
     max-height: 66px;
     overflow: hidden;
+    position: relative;
 }
 
 #wordInput {
     flex: 1;
     padding: 15px 25px;
+    padding-right: 70px;
     border: none;
     background: transparent;
     font-size: 18px;
@@ -71,20 +73,27 @@ body {
     border-radius: 50%;
     font-size: 20px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
+    font-family: inherit;
 }
 
 .btn-arrow:hover {
     background: #1f2937;
-    transform: scale(1.05);
 }
 
 .btn-arrow:active {
-    transform: scale(0.95);
+    background: #1f2937;
 }
 
 .btn-arrow.result-correct {
@@ -94,7 +103,6 @@ body {
 
 .btn-arrow.result-correct:hover {
     background: #10b981;
-    transform: none;
 }
 
 .btn-arrow.result-incorrect {
@@ -104,7 +112,6 @@ body {
 
 .btn-arrow.result-incorrect:hover {
     background: #ef4444;
-    transform: none;
 }
 
 .result-section {
