@@ -2,12 +2,14 @@
 const wordInput = document.getElementById('wordInput');
 const checkBtn = document.getElementById('checkBtn');
 const pasteBtn = document.getElementById('pasteBtn');
+const demoBtn = document.getElementById('demoBtn');
 const result = document.getElementById('result');
 const resultContent = document.getElementById('resultContent');
 
 // Event listeners
 checkBtn.addEventListener('click', checkSpelling);
 pasteBtn.addEventListener('click', pasteFromClipboard);
+demoBtn.addEventListener('click', runDemo);
 wordInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         checkSpelling();
@@ -122,6 +124,46 @@ function showIncorrectResult(word, suggestions) {
             <span>"<span class="result-word">${word}</span>" is not spelled correctly</span>
         </div>
         ${suggestionsHtml}
+    `;
+    
+    result.classList.remove('hidden');
+    result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function runDemo() {
+    // Demonstrate the programmatic API similar to the sample code
+    const testWords = ['appple', 'hello', 'spellling', 'correct', 'worng'];
+    
+    showResult('info', 'Running programmatic spell check demo...', '🧪');
+    
+    let demoResults = '<h4>Programmatic API Demo Results:</h4><div class="demo-results">';
+    
+    for (const testWord of testWords) {
+        try {
+            const response = await window.electronAPI.programmaticCheck(testWord);
+            
+            if (response.error) {
+                demoResults += `<div class="demo-item error">❌ ${testWord}: ${response.error}</div>`;
+            } else {
+                const status = response.isMisspelled ? '❌ Misspelled' : '✅ Correct';
+                const suggestions = response.suggestions.length > 0 ? ` | Suggestions: ${response.suggestions.join(', ')}` : '';
+                demoResults += `<div class="demo-item">${status}: "${testWord}"${suggestions}</div>`;
+            }
+        } catch (error) {
+            demoResults += `<div class="demo-item error">❌ ${testWord}: Error occurred</div>`;
+        }
+    }
+    
+    demoResults += '</div>';
+    
+    result.className = 'result-section result-demo';
+    resultContent.innerHTML = `
+        <div class="result-title">
+            <span>🧪</span>
+            <span>Programmatic Spell Check Demo</span>
+        </div>
+        ${demoResults}
+        <p><small>Check the console for detailed logs (open DevTools)</small></p>
     `;
     
     result.classList.remove('hidden');

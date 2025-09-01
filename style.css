@@ -105,7 +105,13 @@ header p {
 }
 
 .clipboard-section {
-    text-align: center;
+    display: flex;
+    gap: 10px;
+}
+
+.clipboard-section .btn-secondary {
+    width: auto;
+    flex: 1;
 }
 
 .result-section {
@@ -135,6 +141,18 @@ header p {
     background: #feebc8;
     border: 2px solid #f6ad55;
     color: #744210;
+}
+
+.result-demo {
+    background: #e6fffa;
+    border: 2px solid #38b2ac;
+    color: #234e52;
+}
+
+.result-info {
+    background: #ebf8ff;
+    border: 2px solid #4299e1;
+    color: #2a4365;
 }
 
 .result-title {
@@ -229,4 +247,23 @@ header p {
 
 .btn-primary.loading {
     animation: pulse 1s infinite;
+}
+
+.demo-results {
+    margin-top: 15px;
+}
+
+.demo-item {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.7);
+    border-left: 3px solid #38b2ac;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95em;
+}
+
+.demo-item.error {
+    border-left-color: #f56565;
+    background: rgba(254, 215, 215, 0.7);
 }

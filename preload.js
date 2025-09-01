@@ -4,5 +4,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
   spellCheck: (word) => ipcRenderer.invoke('spell-check', word),
+  programmaticCheck: (word) => ipcRenderer.invoke('programmatic-check', word),
   getClipboard: () => ipcRenderer.invoke('get-clipboard')
 });
