@@ -9,10 +9,11 @@ body {
     background: #6b7280;
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     color: #333;
     padding: 20px;
+    padding-top: 25vh;
 }
 
 .container {
@@ -22,7 +23,8 @@ body {
 }
 
 .input-section {
-    margin-bottom: 40px;
+    margin-bottom: 20px;
+    position: relative;
 }
 
 .input-group {
@@ -117,7 +119,8 @@ body {
 .result-section {
     text-align: center;
     transition: all 0.3s ease;
-    margin-top: 20px;
+    margin-top: 10px;
+    position: relative;
 }
 
 .result-section.hidden {
