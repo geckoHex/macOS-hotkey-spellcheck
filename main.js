@@ -86,7 +86,7 @@ app.whenReady().then(() => {
       if (mainWindow.isVisible()) {
         mainWindow.hide();
       } else {
-        // Center the window on screen
+        // Position the window higher on screen
         const { screen } = require('electron');
         const primaryDisplay = screen.getPrimaryDisplay();
         const { width, height } = primaryDisplay.workAreaSize;
@@ -95,7 +95,7 @@ app.whenReady().then(() => {
         
         mainWindow.setBounds({
           x: Math.round((width - windowWidth) / 2),
-          y: Math.round((height - windowHeight) / 2),
+          y: Math.round((height - windowHeight) / 6), // Changed from /2 to /6 to move higher
           width: windowWidth,
           height: windowHeight
         });
