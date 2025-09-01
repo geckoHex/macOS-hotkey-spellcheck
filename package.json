@@ -1,0 +1,21 @@
+{
+  "name": "electron-spellchecker",
+  "version": "1.0.0",
+  "description": "A simple Electron app for spell checking words",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging"
+  },
+  "keywords": [
+    "electron",
+    "spellchecker",
+    "dictionary"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^26.0.0"
+  },
+  "dependencies": {}
+}

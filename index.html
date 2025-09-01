@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spell Checker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Spell Checker</h1>
+            <p>Enter a word to check its spelling</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="wordInput" 
+                        placeholder="Enter a word to check..."
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <button id="checkBtn" class="btn-primary">Check</button>
+                </div>
+                
+                <div class="clipboard-section">
+                    <button id="pasteBtn" class="btn-secondary">
+                        📋 Paste from Clipboard
+                    </button>
+                </div>
+            </div>
+
+            <div id="result" class="result-section hidden">
+                <div id="resultContent"></div>
+            </div>
+
+            <div class="instructions">
+                <h3>How to use:</h3>
+                <ul>
+                    <li>Type a single word in the input field</li>
+                    <li>Click "Check" or press Enter</li>
+                    <li>Or paste a word from your clipboard</li>
+                    <li>Get instant spelling feedback and suggestions</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
