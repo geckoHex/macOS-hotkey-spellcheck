@@ -31,35 +31,16 @@ A simple and elegant Electron application for checking the spelling of individua
    npm start
    ```
 
-## Development
-
-- **Start in development mode**: `npm run dev`
-- **Main process**: `main.js` - Handles the Electron app and spell checking logic
-- **Renderer process**: `renderer.js` - Handles the user interface
-- **Styling**: `style.css` - Modern CSS with gradients and animations
-
 ## Technical Details
 
 - **Framework**: Electron
-- **Spell Checking**: Custom JavaScript implementation with a built-in dictionary
+- **Spell Checking**: Custom implementation using nspell and dictionary-en
 - **Security**: Context isolation enabled, no node integration in renderer
 - **Cross-platform**: Works on Windows, macOS, and Linux
 
 ## Dictionary
 
-The app includes a basic English dictionary with common words. For production use, you might want to:
-- Load a more comprehensive dictionary file
-- Support multiple languages
-- Add custom word lists
-- Integrate with online spell checking services
-
-## Screenshots
-
-The app features:
-- Clean input interface with type-ahead support
-- Color-coded results (green for correct, red for incorrect)
-- Clickable suggestions for easy word replacement
-- Responsive design that works on different screen sizes
+The app uses the English dictionary provided by the `dictionary-en` package with `nspell` for spell checking functionality.
 
 ## License
 

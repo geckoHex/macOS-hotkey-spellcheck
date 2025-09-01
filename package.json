@@ -4,8 +4,7 @@
   "description": "A simple Electron app for spell checking words",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --enable-logging"
+    "start": "electron ."
   },
   "keywords": [
     "electron",

@@ -2,25 +2,54 @@
 const wordInput = document.getElementById('wordInput');
 const checkBtn = document.getElementById('checkBtn');
 const pasteBtn = document.getElementById('pasteBtn');
-const demoBtn = document.getElementById('demoBtn');
 const result = document.getElementById('result');
 const resultContent = document.getElementById('resultContent');
 
 // Event listeners
 checkBtn.addEventListener('click', checkSpelling);
 pasteBtn.addEventListener('click', pasteFromClipboard);
-demoBtn.addEventListener('click', runDemo);
 wordInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         checkSpelling();
     }
 });
 
-// Handle suggestion clicks
-result.addEventListener('click', (e) => {
+// Handle suggestion clicks and correct word clicks
+result.addEventListener('click', async (e) => {
+    // Check if clicked element or any parent has the correct-word-clickable class
+    const correctWordElement = e.target.closest('.correct-word-clickable');
+    
     if (e.target.classList.contains('suggestion-item')) {
         wordInput.value = e.target.textContent;
         checkSpelling();
+    } else if (correctWordElement) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const word = correctWordElement.textContent.replace('Copied!', '').trim();
+        
+        // Don't copy if already showing "Copied!" feedback
+        if (correctWordElement.textContent.includes('Copied!')) {
+            return;
+        }
+        
+        try {
+            const success = await window.electronAPI.setClipboard(word);
+            if (success) {
+                // Show temporary feedback
+                const originalText = correctWordElement.textContent;
+                correctWordElement.textContent = 'Copied!';
+                correctWordElement.style.backgroundColor = '#68d391';
+                correctWordElement.style.color = 'white';
+                setTimeout(() => {
+                    correctWordElement.textContent = originalText;
+                    correctWordElement.style.backgroundColor = '';
+                    correctWordElement.style.color = '';
+                }, 1500);
+            }
+        } catch (error) {
+            console.error('Failed to copy to clipboard:', error);
+        }
     }
 });
 
@@ -32,7 +61,6 @@ async function checkSpelling() {
         return;
     }
 
-    // Show loading state
     checkBtn.classList.add('loading');
     checkBtn.textContent = 'Checking...';
     
@@ -42,15 +70,13 @@ async function checkSpelling() {
         if (response.error) {
             showResult('error', response.error, '⚠️');
         } else if (response.isCorrect) {
-            showResult('correct', `"${response.word}" is spelled correctly!`, '✅');
+            showCorrectResult(response.word);
         } else {
             showIncorrectResult(response.word, response.suggestions);
         }
     } catch (error) {
         showResult('error', 'An error occurred while checking spelling', '❌');
-        console.error('Spell check error:', error);
     } finally {
-        // Reset button state
         checkBtn.classList.remove('loading');
         checkBtn.textContent = 'Check';
     }
@@ -61,12 +87,10 @@ async function pasteFromClipboard() {
         const clipboardText = await window.electronAPI.getClipboard();
         
         if (clipboardText) {
-            // Get the first word if multiple words are pasted
             const firstWord = clipboardText.split(/\s+/)[0];
             wordInput.value = firstWord;
             wordInput.focus();
             
-            // Auto-check if it's a single word
             if (!clipboardText.includes(' ')) {
                 checkSpelling();
             }
@@ -75,7 +99,6 @@ async function pasteFromClipboard() {
         }
     } catch (error) {
         showResult('error', 'Could not access clipboard', '❌');
-        console.error('Clipboard error:', error);
     }
 }
 
@@ -87,6 +110,21 @@ function showResult(type, message, icon) {
             <span>${icon}</span>
             <span>${message}</span>
         </div>
+    `;
+    
+    result.classList.remove('hidden');
+    result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showCorrectResult(word) {
+    result.className = 'result-section result-correct';
+    
+    resultContent.innerHTML = `
+        <div class="result-title">
+            <span>✅</span>
+            <span>"<span class="correct-word-clickable" title="Click to copy to clipboard">${word}</span>" is spelled correctly!</span>
+        </div>
+        <p class="copy-instruction">💡 Click the word above to copy it to your clipboard</p>
     `;
     
     result.classList.remove('hidden');
@@ -130,47 +168,6 @@ function showIncorrectResult(word, suggestions) {
     result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-async function runDemo() {
-    // Demonstrate the programmatic API similar to the sample code
-    const testWords = ['appple', 'hello', 'spellling', 'correct', 'worng'];
-    
-    showResult('info', 'Running programmatic spell check demo...', '🧪');
-    
-    let demoResults = '<h4>Programmatic API Demo Results:</h4><div class="demo-results">';
-    
-    for (const testWord of testWords) {
-        try {
-            const response = await window.electronAPI.programmaticCheck(testWord);
-            
-            if (response.error) {
-                demoResults += `<div class="demo-item error">❌ ${testWord}: ${response.error}</div>`;
-            } else {
-                const status = response.isMisspelled ? '❌ Misspelled' : '✅ Correct';
-                const suggestions = response.suggestions.length > 0 ? ` | Suggestions: ${response.suggestions.join(', ')}` : '';
-                demoResults += `<div class="demo-item">${status}: "${testWord}"${suggestions}</div>`;
-            }
-        } catch (error) {
-            demoResults += `<div class="demo-item error">❌ ${testWord}: Error occurred</div>`;
-        }
-    }
-    
-    demoResults += '</div>';
-    
-    result.className = 'result-section result-demo';
-    resultContent.innerHTML = `
-        <div class="result-title">
-            <span>🧪</span>
-            <span>Programmatic Spell Check Demo</span>
-        </div>
-        ${demoResults}
-        <p><small>Check the console for detailed logs (open DevTools)</small></p>
-    `;
-    
-    result.classList.remove('hidden');
-    result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// Focus the input when the app loads
 window.addEventListener('DOMContentLoaded', () => {
     wordInput.focus();
 });
