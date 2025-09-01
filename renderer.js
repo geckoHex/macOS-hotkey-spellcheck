@@ -21,7 +21,31 @@ wordInput.addEventListener('input', () => {
 // Handle suggestion clicks
 result.addEventListener('click', async (e) => {
     if (e.target.classList.contains('suggestion-item')) {
-        wordInput.value = e.target.textContent;
+        const suggestionText = e.target.textContent;
+        
+        // Copy suggestion to clipboard
+        try {
+            await window.electronAPI.setClipboard(suggestionText);
+            
+            // Show visual feedback that it was copied
+            const originalText = e.target.textContent;
+            e.target.textContent = '✓ Copied!';
+            e.target.style.backgroundColor = '#d4edda';
+            e.target.style.color = '#155724';
+            
+            // Reset visual feedback after a short delay
+            setTimeout(() => {
+                e.target.textContent = originalText;
+                e.target.style.backgroundColor = '';
+                e.target.style.color = '';
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Failed to copy to clipboard:', error);
+        }
+        
+        // Also set the input value and check spelling as before
+        wordInput.value = suggestionText;
         checkSpelling();
     }
 });
