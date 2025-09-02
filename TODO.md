@@ -16,6 +16,6 @@
 - [ ] style dmg background
 - [x] fix sound system for production builds
 - [ ] add auto spell checker and notify user if they might have spelled a word wrong
-- [ ] Investigate and fix the super long bootup times on first launch after a new build
+- [!] Investigate and fix the super long bootup times on first launch after a new build (macOS security; minimal fixes/ known issue)
 - [x] Investigate and fix keyboard shortcut selector not working (maybe because of app focus issues?)
 - [ ] allow spellcheck ui window to appear over other fullscreen content

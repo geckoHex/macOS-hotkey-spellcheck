@@ -120,6 +120,16 @@ body {
     background: #ef4444;
 }
 
+.btn-arrow.result-loading {
+    background: #f59e0b;
+    cursor: default;
+    animation: pulse 1.5s infinite;
+}
+
+.btn-arrow.result-loading:hover {
+    background: #f59e0b;
+}
+
 .result-section {
     text-align: center;
     transition: all 0.3s ease;
@@ -141,6 +151,16 @@ body {
 
 .result-error {
     margin-bottom: 30px;
+}
+
+.result-loading {
+    margin-bottom: 30px;
+}
+
+.result-loading .result-word-display {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
 }
 
 .result-word-display {

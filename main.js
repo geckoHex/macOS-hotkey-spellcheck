@@ -1,12 +1,34 @@
-const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, shell } = require('electron');
 const path = require('path');
 const nspell = require('nspell');
 const fs = require('fs');
 
+// Startup timing
+const startupTiming = {
+  appStart: Date.now(),
+  phases: {}
+};
+
+function logTiming(phase) {
+  const now = Date.now();
+  const elapsed = now - startupTiming.appStart;
+  startupTiming.phases[phase] = elapsed;
+  console.log(`[TIMING] ${phase}: ${elapsed}ms from app start`);
+}
+
+// Early platform check - exit immediately if not macOS
+if (process.platform !== 'darwin') {
+  console.error('This application only supports macOS');
+  process.exit(1);
+}
+
 // Function to resolve asset paths correctly for both dev and production
 function getAssetPath(...paths) {
+  logTiming('getAssetPath called');
   const basePath = app.isPackaged ? process.resourcesPath : __dirname;
-  return path.join(basePath, 'assets', ...paths);
+  const fullPath = path.join(basePath, 'assets', ...paths);
+  console.log(`[ASSET] Resolved path: ${fullPath}, exists: ${fs.existsSync(fullPath)}`);
+  return fullPath;
 }
 
 let mainWindow;
@@ -151,28 +173,31 @@ function playCopySound() {
 // Configuration management
 const configPath = path.join(app.getPath('userData'), 'config.json');
 
-function loadConfig() {
+async function loadConfig() {
+  logTiming('loadConfig start');
   try {
     if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const config = JSON.parse(await fs.promises.readFile(configPath, 'utf8'));
       currentHotkey = config.hotkey || 'Shift+Control+Option+Command+O';
       soundEnabled = config.soundEnabled !== undefined ? config.soundEnabled : true;
       console.log('Config loaded:', config);
     }
+    logTiming('loadConfig complete');
   } catch (error) {
     console.error('Failed to load config:', error);
     currentHotkey = 'Shift+Control+Option+Command+O';
     soundEnabled = true;
+    logTiming('loadConfig error');
   }
 }
 
-function saveConfig() {
+async function saveConfig() {
   try {
     const config = {
       hotkey: currentHotkey,
       soundEnabled: soundEnabled
     };
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2));
     console.log('Config saved:', config);
   } catch (error) {
     console.error('Failed to save config:', error);
@@ -183,23 +208,57 @@ class ElectronSpellChecker {
   constructor() {
     this.language = 'en-US';
     this.spellChecker = null;
+    this.isInitializing = false;
+    this.isInitialized = false;
   }
 
   async initialize() {
+    if (this.isInitializing || this.isInitialized) {
+      return;
+    }
+    
+    logTiming('SpellChecker.initialize start');
+    this.isInitializing = true;
+    
     try {
-      const dictionaryPath = path.join(__dirname, 'node_modules', 'dictionary-en');
+      const dictionaryPath = app.isPackaged 
+        ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'dictionary-en')
+        : path.join(__dirname, 'node_modules', 'dictionary-en');
+      
+      console.log(`[DICT] Dictionary path: ${dictionaryPath}`);
+      console.log(`[DICT] Dictionary path exists: ${fs.existsSync(dictionaryPath)}`);
+      
       const affPath = path.join(dictionaryPath, 'index.aff');
       const dicPath = path.join(dictionaryPath, 'index.dic');
       
+      console.log(`[DICT] AFF path: ${affPath}, exists: ${fs.existsSync(affPath)}`);
+      console.log(`[DICT] DIC path: ${dicPath}, exists: ${fs.existsSync(dicPath)}`);
+      
       if (fs.existsSync(affPath) && fs.existsSync(dicPath)) {
-        const aff = fs.readFileSync(affPath, 'utf8');
-        const dic = fs.readFileSync(dicPath, 'utf8');
+        logTiming('Dictionary files found, starting read');
+        // Use async file reading to avoid blocking the main thread
+        const [aff, dic] = await Promise.all([
+          fs.promises.readFile(affPath, 'utf8'),
+          fs.promises.readFile(dicPath, 'utf8')
+        ]);
+        logTiming('Dictionary files read, creating nspell');
         this.spellChecker = nspell(aff, dic);
+        logTiming('nspell created');
       } else {
+        console.log('[DICT] Dictionary files not found, using default nspell');
         this.spellChecker = nspell();
       }
+      
+      this.isInitialized = true;
+      logTiming('SpellChecker.initialize complete');
+      console.log('Spell checker initialized successfully');
     } catch (error) {
+      console.error('Error initializing spell checker:', error);
       this.spellChecker = nspell();
+      this.isInitialized = true;
+      logTiming('SpellChecker.initialize error fallback');
+    } finally {
+      this.isInitializing = false;
     }
   }
 
@@ -207,14 +266,24 @@ class ElectronSpellChecker {
     this.language = language;
   }
 
-  isMisspelled(word) {
+  async isMisspelled(word) {
+    // Wait for initialization if it's still in progress
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+    
     if (!this.spellChecker) {
       throw new Error('Spell checker not initialized');
     }
     return !this.spellChecker.correct(word);
   }
 
-  getCorrectionsForMisspelling(word) {
+  async getCorrectionsForMisspelling(word) {
+    // Wait for initialization if it's still in progress
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+    
     if (!this.spellChecker) {
       throw new Error('Spell checker not initialized');
     }
@@ -223,6 +292,7 @@ class ElectronSpellChecker {
 }
 
 function createWindow() {
+  logTiming('createWindow start');
   mainWindow = new BrowserWindow({
     width: 600,
     height: 300, // Reduced from 500 to 300
@@ -242,6 +312,8 @@ function createWindow() {
     focusable: true,
     title: 'Spell Checker'
   });
+
+  logTiming('BrowserWindow created');
 
   // Disable all menu shortcuts by setting an empty menu
   mainWindow.setMenu(null);
@@ -304,6 +376,7 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+  logTiming('loadFile called');
 
   // Prevent navigation away from the app
   mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
@@ -329,12 +402,18 @@ function createWindow() {
     }
   });
 
+  // Initialize spell checker asynchronously after window creation
   spellChecker = new ElectronSpellChecker();
-  spellChecker.initialize();
+  // Don't await here - let it initialize in the background
+  spellChecker.initialize().catch(error => {
+    console.error('Failed to initialize spell checker:', error);
+  });
   spellChecker.switchLanguage('en-US');
+  logTiming('createWindow complete');
 }
 
 function createTray() {
+  logTiming('createTray start');
   // Create a tray icon
   tray = new Tray(getAssetPath('iconTemplate.png'));
 
@@ -377,6 +456,7 @@ function createTray() {
   tray.on('right-click', (event, bounds) => {
     tray.popUpContextMenu(contextMenu);
   });
+  logTiming('createTray complete');
 }
 
 function createSettingsWindow() {
@@ -586,7 +666,7 @@ function updateHotkey(newHotkey) {
     
     if (ret) {
       currentHotkey = newHotkey;
-      saveConfig(); // Save the new hotkey to config
+      saveConfig(); // Save the new hotkey to config (fire and forget)
       console.log('Hotkey updated to:', newHotkey);
       return true;
     } else {
@@ -604,36 +684,22 @@ function updateHotkey(newHotkey) {
 }
 
 // This method will be called when Electron has finished initialization
-app.whenReady().then(() => {
-  // Check if the platform is macOS
-  if (process.platform !== 'darwin') {
-    // Show platform not supported dialog
-    dialog.showMessageBox({
-      type: 'warning',
-      title: 'Platform Not Supported',
-      message: 'Only macOS is supported at the moment',
-      detail: 'This application is currently designed to work only on macOS. Support for other platforms may be added in future versions.',
-      buttons: ['OK']
-    }).then(() => {
-      // Quit the app after user clicks OK
-      app.quit();
-    });
-    return;
-  }
+app.whenReady().then(async () => {
+  logTiming('app.whenReady called');
   
   // Hide dock icon on macOS
-  if (process.platform === 'darwin') {
-    app.dock.hide();
-  }
+  app.dock.hide();
+  logTiming('dock hidden');
   
-  // Load configuration
-  loadConfig();
+  // Load configuration asynchronously
+  await loadConfig();
   
   createWindow();
   createTray();
   
   // Register global shortcut
   registerGlobalShortcut();
+  logTiming('app initialization complete');
 });
 
 // Quit when all windows are closed
@@ -682,12 +748,21 @@ ipcMain.handle('spell-check', async (event, word) => {
       };
     }
     
-    const isMisspelled = spellChecker.isMisspelled(cleanWord);
+    // Check if spell checker is still initializing
+    if (!spellChecker.isInitialized) {
+      return {
+        isCorrect: false,
+        loading: true,
+        error: 'Spell checker is loading...'
+      };
+    }
+    
+    const isMisspelled = await spellChecker.isMisspelled(cleanWord);
     const isCorrect = !isMisspelled;
     
     let suggestions = [];
     if (isMisspelled) {
-      suggestions = spellChecker.getCorrectionsForMisspelling(cleanWord);
+      suggestions = await spellChecker.getCorrectionsForMisspelling(cleanWord);
       suggestions = suggestions.slice(0, 5);
     }
     
@@ -744,7 +819,7 @@ ipcMain.handle('update-hotkey', async (event, newHotkey) => {
 ipcMain.handle('update-sound-setting', async (event, enabled) => {
   try {
     soundEnabled = enabled;
-    saveConfig();
+    saveConfig(); // Save asynchronously (fire and forget)
     console.log('Sound setting updated to:', enabled);
     return true;
   } catch (error) {

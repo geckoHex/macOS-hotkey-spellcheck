@@ -425,7 +425,16 @@ async function checkSpelling() {
     try {
         const response = await window.electronAPI.spellCheck(word);
         
-        if (response.error) {
+        if (response.loading) {
+            // Dictionary is still loading, show loading message and try again
+            showResult('loading', 'Dictionary loading... Please try again in a moment.');
+            // Auto-retry after a short delay
+            setTimeout(() => {
+                if (wordInput.value.trim() === word) {
+                    checkSpelling();
+                }
+            }, 2000);
+        } else if (response.error) {
             showResult('error', response.error);
         } else if (response.isCorrect) {
             showCorrectResult(response.word);
@@ -447,8 +456,13 @@ function resetButton() {
 }
 
 function showResult(type, message) {
-    checkBtn.textContent = '⚠️';
-    checkBtn.className = `btn-arrow result-${type}`;
+    if (type === 'loading') {
+        checkBtn.textContent = '⏳';
+        checkBtn.className = 'btn-arrow result-loading';
+    } else {
+        checkBtn.textContent = '⚠️';
+        checkBtn.className = `btn-arrow result-${type}`;
+    }
     
     result.className = `result-section result-${type}`;
     

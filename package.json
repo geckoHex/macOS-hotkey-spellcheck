@@ -35,7 +35,8 @@
       "!node_modules/electron/**/*"
     ],
     "asarUnpack": [
-      "assets/**/*"
+      "assets/**/*",
+      "node_modules/dictionary-en/**/*"
     ],
     "extraResources": [
       {
