@@ -109,7 +109,7 @@ function createWindow() {
 
 function createTray() {
   // Create a tray icon
-  tray = new Tray(path.join(__dirname, 'public', 'iconTemplate.png'));
+  tray = new Tray(path.join(__dirname, 'assets', 'iconTemplate.png'));
 
   // Create context menu for the tray
   const contextMenu = Menu.buildFromTemplate([
