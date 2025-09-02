@@ -64,3 +64,19 @@ Because this app is not signed, macOS will prevent it from being opened the firs
 Please also note that the first time you install the app as while as after subsequent updates the app may take some time to launch as macOS performs its own checks. This is normal behavior. Quitting and relaunching in day-to-day use should not encounter this slowdown.
 
 When you first launch the app, you may want to adjust the settings to your preference. You can access the settings menu from the menu bar icon. If you'd like, you can rearrange the menu bar icon's position by command and dragging the icon.
+
+## Credits
+This app wouldn't be possible without the following assets. All assets used are used under their appropriate licenses.
+
+| Asset Type | Asset Description                               | Filepath                                | Source                                                                   |
+|------------|-------------------------------------------------|-----------------------------------------|--------------------------------------------------------------------------|
+| Sound      | Spellcheck UI open sound (trimmed)              | `assets/window-open.mp3`                | [Pixabay](https://pixabay.com/sound-effects/ui-sounds-pack-3-15-359713/) |
+| Sound      | Item hover sound (trimmed)                      | `assets/item-hover.mp3`                 | [Pixabay](https://pixabay.com/sound-effects/ui-sounds-pack-4-9-359736/)  |
+| Sound      | Wrong sound                                     | `assets/wrong.mp3`                      | [Pixabay](https://pixabay.com/sound-effects/ui-sounds-pack-5-4-359761/)  |
+| Sound      | Right sound                                     | `assets/right.mp3`                      | [Pixabay](https://pixabay.com/sound-effects/ui-sound-374228/)            |
+| Sound      | Copy sound                                      | `assets/copy.mp3`                       | [Pixabay](https://pixabay.com/sound-effects/ui-sounds-pack-3-8-359730/)  |
+| Icon       | Textbox icon (menu bar and app icon)            | `assets/icons/textbox.svg`              | [Phosphor Icons](https://phosphoricons.com/)                             |
+| Icon       | Install arrow icon (arrow-fat-line-right)       | `assets/icons/arrow-fat-line-right.svg` | [Phosphor Icons](https://phosphoricons.com/)                             |
+| Icon       | Pencil icon (used in DMG background pattern)    | `assets/icons/pencil.svg`               | [Phosphor Icons](https://phosphoricons.com/)                             |
+| Icon       | Paperclip icon (used in DMG background pattern) | `assets/icons/paperclip.svg`            | [Phosphor Icons](https://phosphoricons.com/)                             |
+| Icon       | Pen icon (used in DMG background pattern)       | `assets/icons/pen.svg`                  | [Phosphor Icons](https://phosphoricons.com/)                             |
