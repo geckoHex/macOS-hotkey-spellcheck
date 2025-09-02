@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, dialog } = require('electron');
 const path = require('path');
 const nspell = require('nspell');
 const fs = require('fs');
@@ -286,6 +286,22 @@ function updateHotkey(newHotkey) {
 
 // This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
+  // Check if the platform is macOS
+  if (process.platform !== 'darwin') {
+    // Show platform not supported dialog
+    dialog.showMessageBox({
+      type: 'warning',
+      title: 'Platform Not Supported',
+      message: 'Only macOS is supported at the moment',
+      detail: 'This application is currently designed to work only on macOS. Support for other platforms may be added in future versions.',
+      buttons: ['OK']
+    }).then(() => {
+      // Quit the app after user clicks OK
+      app.quit();
+    });
+    return;
+  }
+  
   // Hide dock icon on macOS
   if (process.platform === 'darwin') {
     app.dock.hide();
