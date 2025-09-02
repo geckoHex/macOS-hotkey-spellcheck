@@ -188,7 +188,7 @@ function handleKeyDown(e) {
     if (!baseKey && e.key && e.key.length === 1) {
         // For modifier combinations that produce special characters,
         // try to detect the base key
-        if (e.key.match(/[øœåß∂ƒ©˙∆˚¬…æ]/)) {
+        if (e.key.match(/[øœåß∂ƒ©˙∆˚¬…æ∑´®†¥¨ˆπ¡™£¢∞§¶•ªº]/)) {
             // Common special characters produced by modifier combinations
             const specialCharMap = {
                 'ø': 'O', 'œ': 'Q', 'å': 'A', 'ß': 'S', '∂': 'D',
@@ -212,6 +212,7 @@ function handleKeyDown(e) {
     
     // Update input display in real-time
     const tempHotkey = formatHotkeyForInput([...recordedKeys]);
+    
     if (tempHotkey) {
         hotkeyInput.value = formatHotkeyForDisplay(tempHotkey);
         hotkeyInput.dataset.hotkey = tempHotkey;
