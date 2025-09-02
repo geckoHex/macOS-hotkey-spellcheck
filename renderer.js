@@ -7,6 +7,146 @@ const resultContent = document.getElementById('resultContent');
 // Track selected suggestion for keyboard navigation
 let selectedSuggestionIndex = -1;
 let suggestions = [];
+let lastHoverTime = 0; // For debouncing hover sounds
+
+// Preload audio for instant playback
+let windowOpenAudio = null;
+let itemHoverAudio = null;
+let correctAudio = null;
+let incorrectAudio = null;
+let copyAudio = null;
+
+// Preload the window open sound
+function preloadAudio() {
+    try {
+        const audioPath = './assets/window-open.mp3';
+        windowOpenAudio = new Audio(audioPath);
+        windowOpenAudio.volume = 0.5;
+        windowOpenAudio.preload = 'auto';
+        
+        // Load the audio file
+        windowOpenAudio.load();
+        
+        // Preload hover sound
+        const hoverAudioPath = './assets/item-hover.mp3';
+        itemHoverAudio = new Audio(hoverAudioPath);
+        itemHoverAudio.volume = 0.3; // Slightly quieter for hover sound
+        itemHoverAudio.preload = 'auto';
+        itemHoverAudio.load();
+        
+        // Preload correct sound
+        const correctAudioPath = './assets/right.mp3';
+        correctAudio = new Audio(correctAudioPath);
+        correctAudio.volume = 0.4;
+        correctAudio.preload = 'auto';
+        correctAudio.load();
+        
+        // Preload incorrect sound
+        const incorrectAudioPath = './assets/wrong.mp3';
+        incorrectAudio = new Audio(incorrectAudioPath);
+        incorrectAudio.volume = 0.4;
+        incorrectAudio.preload = 'auto';
+        incorrectAudio.load();
+        
+        // Preload copy sound
+        const copyAudioPath = './assets/copy.mp3';
+        copyAudio = new Audio(copyAudioPath);
+        copyAudio.volume = 0.4;
+        copyAudio.preload = 'auto';
+        copyAudio.load();
+        
+        console.log('Audio preloaded successfully');
+    } catch (error) {
+        console.error('Error preloading audio:', error);
+    }
+}
+
+// Function to play hover sound
+async function playHoverSound() {
+    // Simple debounce to prevent excessive sound triggering
+    const now = Date.now();
+    if (now - lastHoverTime < 100) { // 100ms debounce
+        return;
+    }
+    lastHoverTime = now;
+    
+    try {
+        // Try main process first (faster)
+        await window.electronAPI.playHoverSound();
+    } catch (error) {
+        // Fallback to renderer process
+        try {
+            if (itemHoverAudio) {
+                itemHoverAudio.currentTime = 0;
+                itemHoverAudio.play().catch(err => {
+                    console.error('Error playing preloaded hover audio:', err);
+                });
+            }
+        } catch (fallbackError) {
+            console.error('Error in hover sound fallback:', fallbackError);
+        }
+    }
+}
+
+// Function to play correct sound
+async function playCorrectSound() {
+    try {
+        // Try main process first (faster)
+        await window.electronAPI.playCorrectSound();
+    } catch (error) {
+        // Fallback to renderer process
+        try {
+            if (correctAudio) {
+                correctAudio.currentTime = 0;
+                correctAudio.play().catch(err => {
+                    console.error('Error playing preloaded correct audio:', err);
+                });
+            }
+        } catch (fallbackError) {
+            console.error('Error in correct sound fallback:', fallbackError);
+        }
+    }
+}
+
+// Function to play incorrect sound
+async function playIncorrectSound() {
+    try {
+        // Try main process first (faster)
+        await window.electronAPI.playIncorrectSound();
+    } catch (error) {
+        // Fallback to renderer process
+        try {
+            if (incorrectAudio) {
+                incorrectAudio.currentTime = 0;
+                incorrectAudio.play().catch(err => {
+                    console.error('Error playing preloaded incorrect audio:', err);
+                });
+            }
+        } catch (fallbackError) {
+            console.error('Error in incorrect sound fallback:', fallbackError);
+        }
+    }
+}
+
+// Function to play copy sound
+async function playCopySound() {
+    try {
+        // Try main process first (faster)
+        await window.electronAPI.playCopySound();
+    } catch (error) {
+        // Fallback to renderer process
+        try {
+            if (copyAudio) {
+                copyAudio.currentTime = 0;
+                copyAudio.play().catch(err => {
+                    console.error('Error playing preloaded copy audio:', err);
+                });
+            }
+        } catch (fallbackError) {
+            console.error('Error in copy sound fallback:', fallbackError);
+        }
+    }
+}
 
 // Event listeners
 checkBtn.addEventListener('click', checkSpelling);
@@ -103,10 +243,12 @@ wordInput.addEventListener('keydown', (e) => {
         e.preventDefault();
         selectedSuggestionIndex = (selectedSuggestionIndex + 1) % suggestionItems.length;
         updateSelectedSuggestion(suggestionItems);
+        playHoverSound(); // Play hover sound on keyboard navigation
     } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         selectedSuggestionIndex = selectedSuggestionIndex <= 0 ? suggestionItems.length - 1 : selectedSuggestionIndex - 1;
         updateSelectedSuggestion(suggestionItems);
+        playHoverSound(); // Play hover sound on keyboard navigation
     } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
         e.preventDefault();
         selectSuggestion(suggestionItems[selectedSuggestionIndex]);
@@ -149,9 +291,10 @@ result.addEventListener('mouseover', (e) => {
     if (e.target.classList.contains('suggestion-item')) {
         const suggestionItems = document.querySelectorAll('.suggestion-item');
         const hoveredIndex = Array.from(suggestionItems).indexOf(e.target);
-        if (hoveredIndex !== -1) {
+        if (hoveredIndex !== -1 && hoveredIndex !== selectedSuggestionIndex) {
             selectedSuggestionIndex = hoveredIndex;
             updateSelectedSuggestion(suggestionItems);
+            playHoverSound(); // Play hover sound on mouse hover
         }
     }
 });
@@ -172,6 +315,9 @@ async function selectSuggestion(suggestionElement) {
     // Copy suggestion to clipboard
     try {
         await window.electronAPI.setClipboard(suggestionText);
+        
+        // Play copy sound when successfully copied
+        playCopySound();
         
         // Show visual feedback that it was copied
         const originalText = suggestionElement.textContent;
@@ -232,8 +378,10 @@ async function checkSpelling() {
             showResult('error', response.error);
         } else if (response.isCorrect) {
             showCorrectResult(response.word);
+            playCorrectSound(); // Play correct sound
         } else {
             showIncorrectResult(response.word, response.suggestions);
+            playIncorrectSound(); // Play incorrect sound
         }
     } catch (error) {
         showResult('error', 'An error occurred while checking spelling');
@@ -297,6 +445,9 @@ function showIncorrectResult(word, suggestionsList) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Preload audio for instant playback
+    preloadAudio();
+    
     wordInput.focus();
     
     // Listen for focus events from main process
@@ -310,6 +461,110 @@ window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             wordInput.focus();
         }, 100);
+    });
+    
+    // Listen for audio play events from main process (fallback for non-macOS)
+    window.electronAPI.onPlayAudio((event, audioPath) => {
+        try {
+            if (windowOpenAudio) {
+                // Use preloaded audio for instant playback
+                windowOpenAudio.currentTime = 0;
+                windowOpenAudio.play().catch(error => {
+                    console.error('Error playing preloaded audio:', error);
+                });
+            } else {
+                // Fallback: create new audio element if preload failed
+                const audio = new Audio('./assets/window-open.mp3');
+                audio.volume = 0.5;
+                audio.play().catch(error => {
+                    console.error('Error playing fallback audio:', error);
+                });
+            }
+        } catch (error) {
+            console.error('Error in audio playback:', error);
+        }
+    });
+    
+    // Listen for hover audio play events from main process (fallback for non-macOS)
+    window.electronAPI.onPlayHoverAudio((event, audioPath) => {
+        try {
+            if (itemHoverAudio) {
+                // Use preloaded hover audio for instant playback
+                itemHoverAudio.currentTime = 0;
+                itemHoverAudio.play().catch(error => {
+                    console.error('Error playing preloaded hover audio:', error);
+                });
+            } else {
+                // Fallback: create new audio element if preload failed
+                const audio = new Audio('./assets/item-hover.mp3');
+                audio.volume = 0.3;
+                audio.play().catch(error => {
+                    console.error('Error playing fallback hover audio:', error);
+                });
+            }
+        } catch (error) {
+            console.error('Error in hover audio playback:', error);
+        }
+    });
+    
+    // Listen for correct audio play events from main process (fallback for non-macOS)
+    window.electronAPI.onPlayCorrectAudio((event, audioPath) => {
+        try {
+            if (correctAudio) {
+                correctAudio.currentTime = 0;
+                correctAudio.play().catch(error => {
+                    console.error('Error playing preloaded correct audio:', error);
+                });
+            } else {
+                const audio = new Audio('./assets/right.mp3');
+                audio.volume = 0.4;
+                audio.play().catch(error => {
+                    console.error('Error playing fallback correct audio:', error);
+                });
+            }
+        } catch (error) {
+            console.error('Error in correct audio playback:', error);
+        }
+    });
+    
+    // Listen for incorrect audio play events from main process (fallback for non-macOS)
+    window.electronAPI.onPlayIncorrectAudio((event, audioPath) => {
+        try {
+            if (incorrectAudio) {
+                incorrectAudio.currentTime = 0;
+                incorrectAudio.play().catch(error => {
+                    console.error('Error playing preloaded incorrect audio:', error);
+                });
+            } else {
+                const audio = new Audio('./assets/wrong.mp3');
+                audio.volume = 0.4;
+                audio.play().catch(error => {
+                    console.error('Error playing fallback incorrect audio:', error);
+                });
+            }
+        } catch (error) {
+            console.error('Error in incorrect audio playback:', error);
+        }
+    });
+    
+    // Listen for copy audio play events from main process (fallback for non-macOS)
+    window.electronAPI.onPlayCopyAudio((event, audioPath) => {
+        try {
+            if (copyAudio) {
+                copyAudio.currentTime = 0;
+                copyAudio.play().catch(error => {
+                    console.error('Error playing preloaded copy audio:', error);
+                });
+            } else {
+                const audio = new Audio('./assets/copy.mp3');
+                audio.volume = 0.4;
+                audio.play().catch(error => {
+                    console.error('Error playing fallback copy audio:', error);
+                });
+            }
+        } catch (error) {
+            console.error('Error in copy audio playback:', error);
+        }
     });
     
     // Add click listener to detect clicks outside the content area

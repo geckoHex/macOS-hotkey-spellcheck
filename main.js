@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, dialog, shell } = require('electron');
 const path = require('path');
 const nspell = require('nspell');
 const fs = require('fs');
@@ -8,6 +8,126 @@ let settingsWindow;
 let spellChecker;
 let tray;
 let currentHotkey = 'Shift+Command+O';
+
+// Function to play window open sound directly from main process
+function playWindowOpenSound() {
+  try {
+    const audioPath = path.join(__dirname, 'assets', 'window-open.mp3');
+    if (fs.existsSync(audioPath)) {
+      // Use shell.openPath or fallback to system sound
+      if (process.platform === 'darwin') {
+        // On macOS, use afplay for instant audio playback
+        const { spawn } = require('child_process');
+        const player = spawn('afplay', [audioPath], { 
+          stdio: 'ignore',
+          detached: true 
+        });
+        player.unref();
+      } else {
+        // Fallback: send to renderer for other platforms
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('play-audio', audioPath);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error playing window open sound:', error);
+  }
+}
+
+// Function to play item hover sound directly from main process
+function playItemHoverSound() {
+  try {
+    const audioPath = path.join(__dirname, 'assets', 'item-hover.mp3');
+    if (fs.existsSync(audioPath)) {
+      if (process.platform === 'darwin') {
+        // On macOS, use afplay for instant audio playback
+        const { spawn } = require('child_process');
+        const player = spawn('afplay', [audioPath], { 
+          stdio: 'ignore',
+          detached: true 
+        });
+        player.unref();
+      } else {
+        // Fallback: send to renderer for other platforms
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('play-hover-audio', audioPath);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error playing item hover sound:', error);
+  }
+}
+
+// Function to play correct spelling sound
+function playCorrectSound() {
+  try {
+    const audioPath = path.join(__dirname, 'assets', 'right.mp3');
+    if (fs.existsSync(audioPath)) {
+      if (process.platform === 'darwin') {
+        const { spawn } = require('child_process');
+        const player = spawn('afplay', [audioPath], { 
+          stdio: 'ignore',
+          detached: true 
+        });
+        player.unref();
+      } else {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('play-correct-audio', audioPath);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error playing correct sound:', error);
+  }
+}
+
+// Function to play incorrect spelling sound
+function playIncorrectSound() {
+  try {
+    const audioPath = path.join(__dirname, 'assets', 'wrong.mp3');
+    if (fs.existsSync(audioPath)) {
+      if (process.platform === 'darwin') {
+        const { spawn } = require('child_process');
+        const player = spawn('afplay', [audioPath], { 
+          stdio: 'ignore',
+          detached: true 
+        });
+        player.unref();
+      } else {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('play-incorrect-audio', audioPath);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error playing incorrect sound:', error);
+  }
+}
+
+// Function to play copy sound
+function playCopySound() {
+  try {
+    const audioPath = path.join(__dirname, 'assets', 'copy.mp3');
+    if (fs.existsSync(audioPath)) {
+      if (process.platform === 'darwin') {
+        const { spawn } = require('child_process');
+        const player = spawn('afplay', [audioPath], { 
+          stdio: 'ignore',
+          detached: true 
+        });
+        player.unref();
+      } else {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('play-copy-audio', audioPath);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error playing copy sound:', error);
+  }
+}
 
 // Configuration management
 const configPath = path.join(app.getPath('userData'), 'config.json');
@@ -359,6 +479,9 @@ function showWindow() {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
     } else {
+      // Play window open sound immediately for best responsiveness
+      playWindowOpenSound();
+      
       // Position the window higher on screen
       const { screen } = require('electron');
       const primaryDisplay = screen.getPrimaryDisplay();
@@ -574,4 +697,20 @@ ipcMain.handle('close-settings', async () => {
 
 ipcMain.handle('open-settings', async () => {
   createSettingsWindow();
+});
+
+ipcMain.handle('play-hover-sound', async () => {
+  playItemHoverSound();
+});
+
+ipcMain.handle('play-correct-sound', async () => {
+  playCorrectSound();
+});
+
+ipcMain.handle('play-incorrect-sound', async () => {
+  playIncorrectSound();
+});
+
+ipcMain.handle('play-copy-sound', async () => {
+  playCopySound();
 });

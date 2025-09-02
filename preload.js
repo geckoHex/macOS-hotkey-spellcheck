@@ -6,6 +6,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setClipboard: (text) => ipcRenderer.invoke('set-clipboard', text),
   hideWindow: () => ipcRenderer.invoke('hide-window'),
   onFocusInput: (callback) => ipcRenderer.on('focus-input', callback),
+  onPlayAudio: (callback) => ipcRenderer.on('play-audio', callback),
+  onPlayHoverAudio: (callback) => ipcRenderer.on('play-hover-audio', callback),
+  onPlayCorrectAudio: (callback) => ipcRenderer.on('play-correct-audio', callback),
+  onPlayIncorrectAudio: (callback) => ipcRenderer.on('play-incorrect-audio', callback),
+  onPlayCopyAudio: (callback) => ipcRenderer.on('play-copy-audio', callback),
+  playHoverSound: () => ipcRenderer.invoke('play-hover-sound'),
+  playCorrectSound: () => ipcRenderer.invoke('play-correct-sound'),
+  playIncorrectSound: () => ipcRenderer.invoke('play-incorrect-sound'),
+  playCopySound: () => ipcRenderer.invoke('play-copy-sound'),
   
   // Settings APIs
   getSettings: () => ipcRenderer.invoke('get-settings'),
