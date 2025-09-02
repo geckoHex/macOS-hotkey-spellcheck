@@ -1,3 +1,5 @@
 - [ ] Disable default system hotkeys (minimize, quit)
 - [ ] Disable default electron/ chromium hotkeys (dev tools, refresh)
 - [ ] Add a better menu bar icon
+- [ ] Make menu bar icon open/ close app (right click for settings)
+- [ ] Close input bar when clicked out of
