@@ -8,6 +8,7 @@ const resultContent = document.getElementById('resultContent');
 let selectedSuggestionIndex = -1;
 let suggestions = [];
 let lastHoverTime = 0; // For debouncing hover sounds
+let lastWindowOpenTime = 0; // For debouncing window open sounds
 let soundEnabled = true; // Re-enable sound with fixed asset loading
 
 // Preload audio for instant playback
@@ -152,6 +153,13 @@ async function playIncorrectSound() {
 // Function to play window open sound
 async function playWindowOpenSound() {
     if (!soundEnabled) return; // Check if sound is enabled
+    
+    // Debounce to prevent rapid duplicate plays
+    const now = Date.now();
+    if (now - lastWindowOpenTime < 500) { // 500ms debounce
+        return;
+    }
+    lastWindowOpenTime = now;
     
     try {
         if (windowOpenAudio) {
@@ -510,10 +518,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         result.classList.add('hidden');
         selectedSuggestionIndex = -1;
         
-        // Play window open sound
-        playWindowOpenSound();
-        
-        // Focus the input
+        // Focus the input (sound will be played by onPlayAudio event)
         setTimeout(() => {
             wordInput.focus();
         }, 100);
