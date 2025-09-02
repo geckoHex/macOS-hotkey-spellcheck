@@ -83,7 +83,7 @@ class ElectronSpellChecker {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 600,
-    height: 500,
+    height: 300, // Reduced from 500 to 300
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -171,6 +171,13 @@ function createWindow() {
   mainWindow.webContents.on('zoom-changed', (event) => {
     event.preventDefault();
     mainWindow.webContents.setZoomFactor(1.0);
+  });
+
+  // Hide window when it loses focus (user clicks outside)
+  mainWindow.on('blur', () => {
+    if (mainWindow && mainWindow.isVisible()) {
+      mainWindow.hide();
+    }
   });
 
   spellChecker = new ElectronSpellChecker();
@@ -357,7 +364,7 @@ function showWindow() {
       const primaryDisplay = screen.getPrimaryDisplay();
       const { width, height } = primaryDisplay.workAreaSize;
       const windowWidth = 600;
-      const windowHeight = 500;
+      const windowHeight = 300; // Updated to match new window height
       
       mainWindow.setBounds({
         x: Math.round((width - windowWidth) / 2),

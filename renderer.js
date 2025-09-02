@@ -311,4 +311,15 @@ window.addEventListener('DOMContentLoaded', () => {
             wordInput.focus();
         }, 100);
     });
+    
+    // Add click listener to detect clicks outside the content area
+    document.addEventListener('click', async (e) => {
+        const container = document.querySelector('.container');
+        
+        // Check if the click is outside the container
+        if (container && !container.contains(e.target)) {
+            // Hide the window when clicking outside the content
+            await window.electronAPI.hideWindow();
+        }
+    });
 });

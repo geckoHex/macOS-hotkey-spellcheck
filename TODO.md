@@ -2,4 +2,4 @@
 - [x] Disable default electron/ chromium hotkeys (dev tools, refresh)
 - [x] Add a better menu bar icon
 - [x] Make menu bar icon open/ close app (right click for settings)
-- [ ] Close input bar when clicked out of
+- [x] Close input bar when clicked out of
