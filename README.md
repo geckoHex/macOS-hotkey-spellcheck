@@ -69,7 +69,7 @@ When you first launch the app, you may want to adjust the settings to your prefe
 | Feature               | Description                                                         | Status       | Priority   |
 |-----------------------|---------------------------------------------------------------------|--------------|------------|
 | Pasting               | Allow users to paste text into the spellcheck UI                    | Next Up      | High       |
-| Deploy App            | Package and deploy the app as a `.dmg` on GitHub                    | In-Progress  | High       |
+| Deploy App            | Package and deploy the app as a `.dmg` on GitHub                    | Complete     | High       |
 | Auto paste            | Automatically paste suggestion into the user's current app          | Planned      | Medium     |
 | TTS                   | Implement text-to-speech functionality                              | Planned      | Medium     |
 | STT                   | Implement speech-to-text functionality                              | Planned      | Medium     |
