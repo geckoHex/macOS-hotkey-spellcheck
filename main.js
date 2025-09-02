@@ -244,9 +244,17 @@ function createWindow() {
   mainWindow.webContents.on('before-input-event', (event, input) => {
     // Block all shortcuts that use Cmd key (or Ctrl on other platforms)
     if (input.meta || input.control) {
-      // Allow only our custom settings shortcut (Cmd+,)
+      // Allow our custom settings shortcut (Cmd+,)
       if (input.key === ',' && input.meta) {
         return; // Allow this one
+      }
+      // Allow Cmd+A (select all)
+      if (input.key === 'a' || input.key === 'A') {
+        return; // Allow select all
+      }
+      // Allow Cmd+Delete (delete to beginning of line)
+      if (input.key === 'Backspace' && input.meta) {
+        return; // Allow Cmd+Delete
       }
       // Block everything else
       event.preventDefault();
@@ -278,7 +286,6 @@ function createWindow() {
         (input.key === 'G' && input.meta) || // Find next
         (input.key === 'Z' && input.meta) || // Undo
         (input.key === 'Y' && input.meta) || // Redo
-        (input.key === 'A' && input.meta) || // Select all
         (input.key === 'C' && input.meta) || // Copy (except our clipboard functionality)
         (input.key === 'V' && input.meta) || // Paste
         (input.key === 'X' && input.meta) || // Cut
@@ -412,6 +419,14 @@ function createSettingsWindow() {
       // Allow window close (Cmd+W) for settings window since it has normal window controls
       if (input.key === 'w' || input.key === 'W') {
         return; // Allow window close for settings
+      }
+      // Allow Cmd+A (select all)
+      if (input.key === 'a' || input.key === 'A') {
+        return; // Allow select all
+      }
+      // Allow Cmd+Delete (delete to beginning of line)
+      if (input.key === 'Backspace' && input.meta) {
+        return; // Allow Cmd+Delete
       }
       // Block everything else
       event.preventDefault();

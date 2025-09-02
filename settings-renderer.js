@@ -343,6 +343,16 @@ document.addEventListener('keydown', (e) => {
             return; // Allow window close
         }
         
+        // Allow Cmd+A (select all) in input fields
+        if ((e.key === 'a' || e.key === 'A') && e.target.tagName === 'INPUT') {
+            return; // Allow select all in input fields
+        }
+        
+        // Allow Cmd+Delete (delete to beginning of line) in input fields
+        if (e.key === 'Backspace' && e.metaKey && e.target.tagName === 'INPUT') {
+            return; // Allow Cmd+Delete in input fields
+        }
+        
         // If we're recording hotkeys, allow them through
         if (isRecording) {
             return; // Let the hotkey recording handle it

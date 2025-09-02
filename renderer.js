@@ -208,11 +208,21 @@ function shakeInput() {
 document.addEventListener('keydown', async (e) => {
     // Block all system and browser shortcuts except allowed ones
     if (e.metaKey || e.ctrlKey) {
-        // Allow only our custom settings shortcut (Cmd+,)
+        // Allow our custom settings shortcut (Cmd+,)
         if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
             e.preventDefault();
             await window.electronAPI.openSettings();
             return;
+        }
+        
+        // Allow Cmd+A (select all) when focused on input
+        if ((e.key === 'a' || e.key === 'A') && e.target === wordInput) {
+            return; // Allow select all in input field
+        }
+        
+        // Allow Cmd+Delete (delete to beginning of line) when focused on input
+        if (e.key === 'Backspace' && e.metaKey && e.target === wordInput) {
+            return; // Allow Cmd+Delete in input field
         }
         
         // Block all other Cmd/Ctrl combinations
