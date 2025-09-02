@@ -1,7 +1,7 @@
 {
-  "name": "electron-spellchecker",
-  "version": "2.1.1",
-  "description": "A simple Electron app for spell checking words",
+  "name": "spellcheck",
+  "version": "2.1.2",
+  "description": "A modern, hotkey accessible spelling helper for macOS.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -14,7 +14,7 @@
     "spellchecker",
     "dictionary"
   ],
-  "author": "Beck",
+  "author": "Gecko",
   "license": "MIT",
   "devDependencies": {
     "electron": "^26.0.0",
@@ -70,13 +70,13 @@
       "contents": [
         {
           "x": 480,
-          "y": 190,
+          "y": 138,
           "type": "link",
           "path": "/Applications"
         },
         {
           "x": 100,
-          "y": 190,
+          "y": 138,
           "type": "file"
         }
       ]
