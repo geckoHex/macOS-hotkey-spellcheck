@@ -10,11 +10,17 @@ let suggestions = [];
 
 // Event listeners
 checkBtn.addEventListener('click', checkSpelling);
-wordInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        checkSpelling();
-    }
-});
+
+// Function to trigger shake animation
+function shakeInput() {
+    const inputGroup = document.querySelector('.input-group');
+    inputGroup.classList.add('shake');
+    
+    // Remove the shake class after animation completes
+    setTimeout(() => {
+        inputGroup.classList.remove('shake');
+    }, 400);
+}
 
 // Handle global escape key to close and reset
 document.addEventListener('keydown', async (e) => {
@@ -33,6 +39,13 @@ document.addEventListener('keydown', async (e) => {
 
 // Handle keyboard navigation for suggestions
 wordInput.addEventListener('keydown', (e) => {
+    // Prevent space key and trigger shake animation
+    if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        shakeInput();
+        return false;
+    }
+    
     const suggestionItems = document.querySelectorAll('.suggestion-item');
     
     if (suggestionItems.length === 0) return;
@@ -48,6 +61,23 @@ wordInput.addEventListener('keydown', (e) => {
     } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
         e.preventDefault();
         selectSuggestion(suggestionItems[selectedSuggestionIndex]);
+    }
+});
+
+// Handle character input validation
+wordInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        checkSpelling();
+        return;
+    }
+    
+    // Allow letters, numbers, apostrophes, and hyphens only
+    const allowedPattern = /^[a-zA-Z0-9'\-]$/;
+    
+    if (!allowedPattern.test(e.key)) {
+        e.preventDefault();
+        shakeInput();
+        return false;
     }
 });
 
