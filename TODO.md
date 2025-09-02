@@ -19,3 +19,4 @@
 - [x] Investigate and fix the super long bootup times on first launch after a new build (macOS security; minimal fixes/ known issue)
 - [x] Investigate and fix keyboard shortcut selector not working (maybe because of app focus issues?)
 - [x] allow spellcheck ui window to appear over other fullscreen content
+- [ ] allow cmd+v in checker UI
