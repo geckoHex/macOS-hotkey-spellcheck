@@ -3,19 +3,25 @@ const path = require('path');
 const nspell = require('nspell');
 const fs = require('fs');
 
+// Function to resolve asset paths correctly for both dev and production
+function getAssetPath(...paths) {
+  const basePath = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..');
+  return path.join(basePath, 'assets', ...paths);
+}
+
 let mainWindow;
 let settingsWindow;
 let spellChecker;
 let tray;
 let currentHotkey = 'Shift+Command+O';
-let soundEnabled = false; // Default to sound disabled due to production issues
+let soundEnabled = true; // Re-enable sound with the fixed asset loading
 
 // Function to play window open sound directly from main process
 function playWindowOpenSound() {
   if (!soundEnabled) return; // Check if sound is enabled
   
   try {
-    const audioPath = path.join(__dirname, 'assets', 'window-open.mp3');
+    const audioPath = getAssetPath('window-open.mp3');
     
     if (fs.existsSync(audioPath)) {
       // Use shell.openPath or fallback to system sound
@@ -44,7 +50,7 @@ function playItemHoverSound() {
   if (!soundEnabled) return; // Check if sound is enabled
   
   try {
-    const audioPath = path.join(__dirname, 'assets', 'item-hover.mp3');
+    const audioPath = getAssetPath('item-hover.mp3');
     
     if (fs.existsSync(audioPath)) {
       if (process.platform === 'darwin') {
@@ -72,7 +78,7 @@ function playCorrectSound() {
   if (!soundEnabled) return; // Check if sound is enabled
   
   try {
-    const audioPath = path.join(__dirname, 'assets', 'right.mp3');
+    const audioPath = getAssetPath('right.mp3');
     if (fs.existsSync(audioPath)) {
       if (process.platform === 'darwin') {
         const { spawn } = require('child_process');
@@ -97,7 +103,7 @@ function playIncorrectSound() {
   if (!soundEnabled) return; // Check if sound is enabled
   
   try {
-    const audioPath = path.join(__dirname, 'assets', 'wrong.mp3');
+    const audioPath = getAssetPath('wrong.mp3');
     if (fs.existsSync(audioPath)) {
       if (process.platform === 'darwin') {
         const { spawn } = require('child_process');
@@ -122,7 +128,7 @@ function playCopySound() {
   if (!soundEnabled) return; // Check if sound is enabled
   
   try {
-    const audioPath = path.join(__dirname, 'assets', 'copy.mp3');
+    const audioPath = getAssetPath('copy.mp3');
     if (fs.existsSync(audioPath)) {
       if (process.platform === 'darwin') {
         const { spawn } = require('child_process');
@@ -330,7 +336,7 @@ function createWindow() {
 
 function createTray() {
   // Create a tray icon
-  tray = new Tray(path.join(__dirname, 'assets', 'iconTemplate.png'));
+  tray = new Tray(getAssetPath('iconTemplate.png'));
 
   // Create context menu for the tray (but don't set it automatically)
   const contextMenu = Menu.buildFromTemplate([
@@ -760,12 +766,12 @@ ipcMain.handle('play-copy-sound', async () => {
 });
 
 ipcMain.handle('get-asset-path', async (event, assetName) => {
-  return path.join(__dirname, 'assets', assetName);
+  return getAssetPath(assetName);
 });
 
 ipcMain.handle('get-asset-data-url', async (event, assetName) => {
   try {
-    const assetPath = path.join(__dirname, 'assets', assetName);
+    const assetPath = getAssetPath(assetName);
     
     if (fs.existsSync(assetPath)) {
       const data = fs.readFileSync(assetPath);

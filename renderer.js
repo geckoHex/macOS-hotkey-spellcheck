@@ -8,7 +8,7 @@ const resultContent = document.getElementById('resultContent');
 let selectedSuggestionIndex = -1;
 let suggestions = [];
 let lastHoverTime = 0; // For debouncing hover sounds
-let soundEnabled = false; // Track sound setting - disabled due to production issues
+let soundEnabled = true; // Re-enable sound with fixed asset loading
 
 // Preload audio for instant playback
 let windowOpenAudio = null;
@@ -20,7 +20,6 @@ let copyAudio = null;
 // Preload the window open sound
 async function preloadAudio() {
     try {
-        // Note: Audio is currently disabled due to production build issues
         // Check if we're in a packaged (production) app
         const isPackaged = await window.electronAPI.isPackaged();
         
@@ -89,7 +88,7 @@ async function preloadAudio() {
             copyAudio.load();
         }
         
-        console.log('Audio preloaded (but disabled)');
+        console.log('Audio preloaded successfully');
     } catch (error) {
         console.error('Error preloading audio:', error);
     }
@@ -107,20 +106,14 @@ async function playHoverSound() {
     lastHoverTime = now;
     
     try {
-        // Try main process first (faster)
-        await window.electronAPI.playHoverSound();
-    } catch (error) {
-        // Fallback to renderer process
-        try {
-            if (itemHoverAudio) {
-                itemHoverAudio.currentTime = 0;
-                itemHoverAudio.play().catch(err => {
-                    console.error('Error playing preloaded hover audio:', err);
-                });
-            }
-        } catch (fallbackError) {
-            console.error('Error in hover sound fallback:', fallbackError);
+        if (itemHoverAudio) {
+            itemHoverAudio.currentTime = 0;
+            itemHoverAudio.play().catch(err => {
+                console.error('Error playing hover audio:', err);
+            });
         }
+    } catch (error) {
+        console.error('Error in hover sound:', error);
     }
 }
 
@@ -129,20 +122,14 @@ async function playCorrectSound() {
     if (!soundEnabled) return; // Check if sound is enabled
     
     try {
-        // Try main process first (faster)
-        await window.electronAPI.playCorrectSound();
-    } catch (error) {
-        // Fallback to renderer process
-        try {
-            if (correctAudio) {
-                correctAudio.currentTime = 0;
-                correctAudio.play().catch(err => {
-                    console.error('Error playing preloaded correct audio:', err);
-                });
-            }
-        } catch (fallbackError) {
-            console.error('Error in correct sound fallback:', fallbackError);
+        if (correctAudio) {
+            correctAudio.currentTime = 0;
+            correctAudio.play().catch(err => {
+                console.error('Error playing correct audio:', err);
+            });
         }
+    } catch (error) {
+        console.error('Error in correct sound:', error);
     }
 }
 
@@ -151,20 +138,30 @@ async function playIncorrectSound() {
     if (!soundEnabled) return; // Check if sound is enabled
     
     try {
-        // Try main process first (faster)
-        await window.electronAPI.playIncorrectSound();
-    } catch (error) {
-        // Fallback to renderer process
-        try {
-            if (incorrectAudio) {
-                incorrectAudio.currentTime = 0;
-                incorrectAudio.play().catch(err => {
-                    console.error('Error playing preloaded incorrect audio:', err);
-                });
-            }
-        } catch (fallbackError) {
-            console.error('Error in incorrect sound fallback:', fallbackError);
+        if (incorrectAudio) {
+            incorrectAudio.currentTime = 0;
+            incorrectAudio.play().catch(err => {
+                console.error('Error playing incorrect audio:', err);
+            });
         }
+    } catch (error) {
+        console.error('Error in incorrect sound:', error);
+    }
+}
+
+// Function to play window open sound
+async function playWindowOpenSound() {
+    if (!soundEnabled) return; // Check if sound is enabled
+    
+    try {
+        if (windowOpenAudio) {
+            windowOpenAudio.currentTime = 0;
+            windowOpenAudio.play().catch(err => {
+                console.error('Error playing window open audio:', err);
+            });
+        }
+    } catch (error) {
+        console.error('Error in window open sound:', error);
     }
 }
 
@@ -173,20 +170,14 @@ async function playCopySound() {
     if (!soundEnabled) return; // Check if sound is enabled
     
     try {
-        // Try main process first (faster)
-        await window.electronAPI.playCopySound();
-    } catch (error) {
-        // Fallback to renderer process
-        try {
-            if (copyAudio) {
-                copyAudio.currentTime = 0;
-                copyAudio.play().catch(err => {
-                    console.error('Error playing preloaded copy audio:', err);
-                });
-            }
-        } catch (fallbackError) {
-            console.error('Error in copy sound fallback:', fallbackError);
+        if (copyAudio) {
+            copyAudio.currentTime = 0;
+            copyAudio.play().catch(err => {
+                console.error('Error playing copy audio:', err);
+            });
         }
+    } catch (error) {
+        console.error('Error in copy sound:', error);
     }
 }
 
@@ -500,13 +491,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     // Preload audio for instant playback
     await preloadAudio();
     
-    // Load sound setting (disabled due to production issues)
+    // Load sound setting
     try {
         const settings = await window.electronAPI.getSettings();
-        soundEnabled = false; // Always disabled for now
+        soundEnabled = settings.soundEnabled ?? true; // Default to true with fixed assets
     } catch (error) {
         console.error('Failed to load sound setting:', error);
-        soundEnabled = false;
+        soundEnabled = true; // Default to enabled
     }
     
     wordInput.focus();
@@ -518,6 +509,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         resetButton();
         result.classList.add('hidden');
         selectedSuggestionIndex = -1;
+        
+        // Play window open sound
+        playWindowOpenSound();
+        
         // Focus the input
         setTimeout(() => {
             wordInput.focus();
@@ -526,106 +521,32 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     // Listen for audio play events from main process (fallback for non-macOS)
     window.electronAPI.onPlayAudio((event, audioPath) => {
-        try {
-            if (windowOpenAudio) {
-                // Use preloaded audio for instant playback
-                windowOpenAudio.currentTime = 0;
-                windowOpenAudio.play().catch(error => {
-                    console.error('Error playing preloaded audio:', error);
-                });
-            } else {
-                // Fallback: create new audio element if preload failed
-                const audio = new Audio('./assets/window-open.mp3');
-                audio.volume = 0.5;
-                audio.play().catch(error => {
-                    console.error('Error playing fallback audio:', error);
-                });
-            }
-        } catch (error) {
-            console.error('Error in audio playback:', error);
-        }
+        // Use our optimized audio player instead
+        playWindowOpenSound();
     });
     
     // Listen for hover audio play events from main process (fallback for non-macOS)
     window.electronAPI.onPlayHoverAudio((event, audioPath) => {
-        try {
-            if (itemHoverAudio) {
-                // Use preloaded hover audio for instant playback
-                itemHoverAudio.currentTime = 0;
-                itemHoverAudio.play().catch(error => {
-                    console.error('Error playing preloaded hover audio:', error);
-                });
-            } else {
-                // Fallback: create new audio element if preload failed
-                const audio = new Audio('./assets/item-hover.mp3');
-                audio.volume = 0.3;
-                audio.play().catch(error => {
-                    console.error('Error playing fallback hover audio:', error);
-                });
-            }
-        } catch (error) {
-            console.error('Error in hover audio playback:', error);
-        }
+        // Use our optimized hover sound function
+        playHoverSound();
     });
     
     // Listen for correct audio play events from main process (fallback for non-macOS)
     window.electronAPI.onPlayCorrectAudio((event, audioPath) => {
-        try {
-            if (correctAudio) {
-                correctAudio.currentTime = 0;
-                correctAudio.play().catch(error => {
-                    console.error('Error playing preloaded correct audio:', error);
-                });
-            } else {
-                const audio = new Audio('./assets/right.mp3');
-                audio.volume = 0.4;
-                audio.play().catch(error => {
-                    console.error('Error playing fallback correct audio:', error);
-                });
-            }
-        } catch (error) {
-            console.error('Error in correct audio playback:', error);
-        }
+        // Use our optimized correct sound function
+        playCorrectSound();
     });
     
     // Listen for incorrect audio play events from main process (fallback for non-macOS)
     window.electronAPI.onPlayIncorrectAudio((event, audioPath) => {
-        try {
-            if (incorrectAudio) {
-                incorrectAudio.currentTime = 0;
-                incorrectAudio.play().catch(error => {
-                    console.error('Error playing preloaded incorrect audio:', error);
-                });
-            } else {
-                const audio = new Audio('./assets/wrong.mp3');
-                audio.volume = 0.4;
-                audio.play().catch(error => {
-                    console.error('Error playing fallback incorrect audio:', error);
-                });
-            }
-        } catch (error) {
-            console.error('Error in incorrect audio playback:', error);
-        }
+        // Use our optimized incorrect sound function
+        playIncorrectSound();
     });
     
     // Listen for copy audio play events from main process (fallback for non-macOS)
     window.electronAPI.onPlayCopyAudio((event, audioPath) => {
-        try {
-            if (copyAudio) {
-                copyAudio.currentTime = 0;
-                copyAudio.play().catch(error => {
-                    console.error('Error playing preloaded copy audio:', error);
-                });
-            } else {
-                const audio = new Audio('./assets/copy.mp3');
-                audio.volume = 0.4;
-                audio.play().catch(error => {
-                    console.error('Error playing fallback copy audio:', error);
-                });
-            }
-        } catch (error) {
-            console.error('Error in copy audio playback:', error);
-        }
+        // Use our optimized copy sound function
+        playCopySound();
     });
     
     // Add click listener to detect clicks outside the content area

@@ -1,6 +1,6 @@
 {
   "name": "electron-spellchecker",
-  "version": "1.1.2",
+  "version": "2.0.0",
   "description": "A simple Electron app for spell checking words",
   "main": "main.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "spellchecker",
     "dictionary"
   ],
-  "author": "Your Name",
+  "author": "Beck",
   "license": "MIT",
   "devDependencies": {
     "electron": "^26.0.0",
@@ -25,7 +25,7 @@
     "nspell": "^2.1.5"
   },
   "build": {
-    "appId": "com.yourname.spellcheck",
+    "appId": "com.geckohex.spellcheck",
     "productName": "Spellcheck",
     "directories": {
       "output": "dist"
@@ -36,6 +36,12 @@
     ],
     "asarUnpack": [
       "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets/"
+      }
     ],
     "mac": {
       "icon": "assets/AppIcon.icns",

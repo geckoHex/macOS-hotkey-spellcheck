@@ -18,16 +18,16 @@ async function initializeSettings() {
         const settings = await window.electronAPI.getSettings();
         currentHotkey = settings.hotkey || 'Shift+Control+Option+Command+O';
         
-        // Set sound toggle state and disable it due to production issues
-        soundToggle.checked = false; // Always disabled for now
-        soundToggle.disabled = true; // Disable the toggle
+        // Set sound toggle state (now working with fixed asset loading)
+        soundToggle.checked = settings.soundEnabled ?? true; // Default to enabled
+        soundToggle.disabled = false; // Enable the toggle
         
         updateCurrentHotkeyDisplay();
     } catch (error) {
         console.error('Failed to load settings:', error);
         currentHotkey = 'Shift+Control+Option+Command+O';
-        soundToggle.checked = false;
-        soundToggle.disabled = true;
+        soundToggle.checked = true; // Default to enabled
+        soundToggle.disabled = false; // Enable the toggle
         updateCurrentHotkeyDisplay();
     }
 }
@@ -296,11 +296,6 @@ async function saveHotkey() {
 
 // Handle sound toggle change
 async function handleSoundToggle() {
-    // Prevent changes when disabled
-    if (soundToggle.disabled) {
-        return;
-    }
-    
     try {
         const isEnabled = soundToggle.checked;
         const success = await window.electronAPI.updateSoundSetting(isEnabled);
