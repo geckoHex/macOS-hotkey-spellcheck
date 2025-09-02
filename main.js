@@ -1,10 +1,11 @@
-const { app, BrowserWindow, ipcMain, clipboard, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu } = require('electron');
 const path = require('path');
 const nspell = require('nspell');
 const fs = require('fs');
 
 let mainWindow;
 let spellChecker;
+let tray;
 
 class ElectronSpellChecker {
   constructor() {
@@ -76,35 +77,87 @@ function createWindow() {
   spellChecker.switchLanguage('en-US');
 }
 
+function createTray() {
+  // Create a tray icon
+  tray = new Tray(path.join(__dirname, 'public', 'menu-bar-icon.png'));
+  
+  // Create context menu for the tray
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show Spell Checker',
+      click: () => {
+        showWindow();
+      }
+    },
+    {
+      label: 'Open Settings',
+      click: () => {
+        // TODO: Implement settings window
+        console.log('Settings clicked - to be implemented');
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: 'Quit',
+      click: () => {
+        app.quit();
+      }
+    }
+  ]);
+  
+  // Set the context menu
+  tray.setContextMenu(contextMenu);
+  
+  // Set tooltip
+  tray.setToolTip('Spell Checker');
+  
+  // Handle tray click - show dropdown menu instead of auto-opening window
+  tray.on('click', () => {
+    tray.popUpContextMenu();
+  });
+}
+
+function showWindow() {
+  if (mainWindow) {
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
+    } else {
+      // Position the window higher on screen
+      const { screen } = require('electron');
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const { width, height } = primaryDisplay.workAreaSize;
+      const windowWidth = 600;
+      const windowHeight = 500;
+      
+      mainWindow.setBounds({
+        x: Math.round((width - windowWidth) / 2),
+        y: Math.round((height - windowHeight) / 6), // Changed from /2 to /6 to move higher
+        width: windowWidth,
+        height: windowHeight
+      });
+      
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send('focus-input');
+    }
+  }
+}
+
 // This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
+  // Hide dock icon on macOS
+  if (process.platform === 'darwin') {
+    app.dock.hide();
+  }
+  
   createWindow();
+  createTray();
   
   // Register global shortcut
   const ret = globalShortcut.register('Shift+Control+Option+Command+O', () => {
-    if (mainWindow) {
-      if (mainWindow.isVisible()) {
-        mainWindow.hide();
-      } else {
-        // Position the window higher on screen
-        const { screen } = require('electron');
-        const primaryDisplay = screen.getPrimaryDisplay();
-        const { width, height } = primaryDisplay.workAreaSize;
-        const windowWidth = 600;
-        const windowHeight = 500;
-        
-        mainWindow.setBounds({
-          x: Math.round((width - windowWidth) / 2),
-          y: Math.round((height - windowHeight) / 6), // Changed from /2 to /6 to move higher
-          width: windowWidth,
-          height: windowHeight
-        });
-        
-        mainWindow.show();
-        mainWindow.focus();
-        mainWindow.webContents.send('focus-input');
-      }
-    }
+    showWindow();
   });
 
   if (!ret) {
@@ -114,6 +167,8 @@ app.whenReady().then(() => {
 
 // Quit when all windows are closed
 app.on('window-all-closed', () => {
+  // On macOS, keep the app running even when all windows are closed
+  // since we're using a tray icon
   if (process.platform !== 'darwin') {
     app.quit();
   }
