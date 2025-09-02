@@ -182,16 +182,16 @@ function createTray() {
   // Create a tray icon
   tray = new Tray(path.join(__dirname, 'assets', 'iconTemplate.png'));
 
-  // Create context menu for the tray
+  // Create context menu for the tray (but don't set it automatically)
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Show Spell Checker',
+      label: 'Show/Hide Spell Checker',
       click: () => {
         showWindow();
       }
     },
     {
-      label: 'Open Settings',
+      label: 'Settings',
       click: () => {
         createSettingsWindow();
       }
@@ -207,15 +207,19 @@ function createTray() {
     }
   ]);
   
-  // Set the context menu
-  tray.setContextMenu(contextMenu);
+  // Don't set the context menu automatically - we'll handle it manually
   
   // Set tooltip
   tray.setToolTip('Spell Checker');
   
-  // Handle tray click - show dropdown menu instead of auto-opening window
-  tray.on('click', () => {
-    tray.popUpContextMenu();
+  // Handle left-click to show/hide main window
+  tray.on('click', (event, bounds) => {
+    showWindow();
+  });
+  
+  // Handle right-click to show context menu
+  tray.on('right-click', (event, bounds) => {
+    tray.popUpContextMenu(contextMenu);
   });
 }
 
