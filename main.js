@@ -8,9 +8,12 @@ let settingsWindow;
 let spellChecker;
 let tray;
 let currentHotkey = 'Shift+Command+O';
+let soundEnabled = true; // Default to sound enabled
 
 // Function to play window open sound directly from main process
 function playWindowOpenSound() {
+  if (!soundEnabled) return; // Check if sound is enabled
+  
   try {
     const audioPath = path.join(__dirname, 'assets', 'window-open.mp3');
     if (fs.existsSync(audioPath)) {
@@ -37,6 +40,8 @@ function playWindowOpenSound() {
 
 // Function to play item hover sound directly from main process
 function playItemHoverSound() {
+  if (!soundEnabled) return; // Check if sound is enabled
+  
   try {
     const audioPath = path.join(__dirname, 'assets', 'item-hover.mp3');
     if (fs.existsSync(audioPath)) {
@@ -62,6 +67,8 @@ function playItemHoverSound() {
 
 // Function to play correct spelling sound
 function playCorrectSound() {
+  if (!soundEnabled) return; // Check if sound is enabled
+  
   try {
     const audioPath = path.join(__dirname, 'assets', 'right.mp3');
     if (fs.existsSync(audioPath)) {
@@ -85,6 +92,8 @@ function playCorrectSound() {
 
 // Function to play incorrect spelling sound
 function playIncorrectSound() {
+  if (!soundEnabled) return; // Check if sound is enabled
+  
   try {
     const audioPath = path.join(__dirname, 'assets', 'wrong.mp3');
     if (fs.existsSync(audioPath)) {
@@ -108,6 +117,8 @@ function playIncorrectSound() {
 
 // Function to play copy sound
 function playCopySound() {
+  if (!soundEnabled) return; // Check if sound is enabled
+  
   try {
     const audioPath = path.join(__dirname, 'assets', 'copy.mp3');
     if (fs.existsSync(audioPath)) {
@@ -137,18 +148,21 @@ function loadConfig() {
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       currentHotkey = config.hotkey || 'Shift+Control+Option+Command+O';
+      soundEnabled = config.soundEnabled !== undefined ? config.soundEnabled : true;
       console.log('Config loaded:', config);
     }
   } catch (error) {
     console.error('Failed to load config:', error);
     currentHotkey = 'Shift+Control+Option+Command+O';
+    soundEnabled = true;
   }
 }
 
 function saveConfig() {
   try {
     const config = {
-      hotkey: currentHotkey
+      hotkey: currentHotkey,
+      soundEnabled: soundEnabled
     };
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     console.log('Config saved:', config);
@@ -681,12 +695,25 @@ ipcMain.handle('hide-window', async () => {
 // Settings IPC handlers
 ipcMain.handle('get-settings', async () => {
   return {
-    hotkey: currentHotkey
+    hotkey: currentHotkey,
+    soundEnabled: soundEnabled
   };
 });
 
 ipcMain.handle('update-hotkey', async (event, newHotkey) => {
   return updateHotkey(newHotkey);
+});
+
+ipcMain.handle('update-sound-setting', async (event, enabled) => {
+  try {
+    soundEnabled = enabled;
+    saveConfig();
+    console.log('Sound setting updated to:', enabled);
+    return true;
+  } catch (error) {
+    console.error('Error updating sound setting:', error);
+    return false;
+  }
 });
 
 ipcMain.handle('close-settings', async () => {

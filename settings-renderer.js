@@ -5,6 +5,7 @@ const hotkeyModal = document.getElementById('hotkeyModal');
 const hotkeyInput = document.getElementById('hotkeyInput');
 const cancelBtn = document.getElementById('cancelBtn');
 const saveHotkeyBtn = document.getElementById('saveHotkeyBtn');
+const soundToggle = document.getElementById('soundToggle');
 
 // State
 let isRecording = false;
@@ -16,10 +17,15 @@ async function initializeSettings() {
     try {
         const settings = await window.electronAPI.getSettings();
         currentHotkey = settings.hotkey || 'Shift+Control+Option+Command+O';
+        
+        // Set sound toggle state
+        soundToggle.checked = settings.soundEnabled !== undefined ? settings.soundEnabled : true;
+        
         updateCurrentHotkeyDisplay();
     } catch (error) {
         console.error('Failed to load settings:', error);
         currentHotkey = 'Shift+Control+Option+Command+O';
+        soundToggle.checked = true;
         updateCurrentHotkeyDisplay();
     }
 }
@@ -286,10 +292,29 @@ async function saveHotkey() {
     }
 }
 
+// Handle sound toggle change
+async function handleSoundToggle() {
+    try {
+        const isEnabled = soundToggle.checked;
+        const success = await window.electronAPI.updateSoundSetting(isEnabled);
+        
+        if (!success) {
+            // Revert toggle if save failed
+            soundToggle.checked = !isEnabled;
+            console.error('Failed to save sound setting');
+        }
+    } catch (error) {
+        console.error('Failed to update sound setting:', error);
+        // Revert toggle if update failed
+        soundToggle.checked = !soundToggle.checked;
+    }
+}
+
 // Event listeners
 changeHotkeyBtn.addEventListener('click', showHotkeyModal);
 cancelBtn.addEventListener('click', hideHotkeyModal);
 saveHotkeyBtn.addEventListener('click', saveHotkey);
+soundToggle.addEventListener('change', handleSoundToggle);
 
 // Key event listeners for recording
 hotkeyInput.addEventListener('keydown', handleKeyDown);

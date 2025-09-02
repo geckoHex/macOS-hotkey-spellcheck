@@ -8,6 +8,7 @@ const resultContent = document.getElementById('resultContent');
 let selectedSuggestionIndex = -1;
 let suggestions = [];
 let lastHoverTime = 0; // For debouncing hover sounds
+let soundEnabled = true; // Track sound setting
 
 // Preload audio for instant playback
 let windowOpenAudio = null;
@@ -63,6 +64,8 @@ function preloadAudio() {
 
 // Function to play hover sound
 async function playHoverSound() {
+    if (!soundEnabled) return; // Check if sound is enabled
+    
     // Simple debounce to prevent excessive sound triggering
     const now = Date.now();
     if (now - lastHoverTime < 100) { // 100ms debounce
@@ -90,6 +93,8 @@ async function playHoverSound() {
 
 // Function to play correct sound
 async function playCorrectSound() {
+    if (!soundEnabled) return; // Check if sound is enabled
+    
     try {
         // Try main process first (faster)
         await window.electronAPI.playCorrectSound();
@@ -110,6 +115,8 @@ async function playCorrectSound() {
 
 // Function to play incorrect sound
 async function playIncorrectSound() {
+    if (!soundEnabled) return; // Check if sound is enabled
+    
     try {
         // Try main process first (faster)
         await window.electronAPI.playIncorrectSound();
@@ -130,6 +137,8 @@ async function playIncorrectSound() {
 
 // Function to play copy sound
 async function playCopySound() {
+    if (!soundEnabled) return; // Check if sound is enabled
+    
     try {
         // Try main process first (faster)
         await window.electronAPI.playCopySound();
@@ -444,9 +453,18 @@ function showIncorrectResult(word, suggestionsList) {
     result.classList.remove('hidden');
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     // Preload audio for instant playback
     preloadAudio();
+    
+    // Load sound setting
+    try {
+        const settings = await window.electronAPI.getSettings();
+        soundEnabled = settings.soundEnabled !== undefined ? settings.soundEnabled : true;
+    } catch (error) {
+        console.error('Failed to load sound setting:', error);
+        soundEnabled = true;
+    }
     
     wordInput.focus();
     

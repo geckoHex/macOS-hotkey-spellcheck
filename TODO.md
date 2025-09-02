@@ -4,6 +4,13 @@
 - [x] Make menu bar icon open/ close app (right click for settings)
 - [x] Close input bar when clicked out of
 
-- [ ] sounds
+- [x] sounds
 - [ ] more clear selector UI
 - [ ] more clear copy message
+
+- [ ] create and use a better design (icon, ui, etc)
+- [ ] allow word definitions to make sure it's the word you wanted
+- [ ] speak word aloud (TTS)
+- [ ] use mic to get word (STT)
+- [ ] add releases to github
+- [ ] style dmg background

@@ -128,6 +128,61 @@ body {
     background: #004bb5;
 }
 
+/* Toggle Switch Styles */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #d1d1d6;
+    border-radius: 24px;
+    transition: background-color 0.2s ease;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #007aff;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.toggle-switch:hover .toggle-slider {
+    background-color: #a1a1a6;
+}
+
+.toggle-switch:hover input:checked + .toggle-slider {
+    background-color: #0056cc;
+}
+
 .settings-footer {
     background: #f5f5f7;
     border-top: 1px solid #e5e5e7;
