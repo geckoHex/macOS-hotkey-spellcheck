@@ -16,3 +16,4 @@
 - [ ] style dmg background
 - [ ] fix sound system for production builds
 - [ ] add auto spell checker and notify user if they might have spelled a word wrong
+- [ ] Investigate and fix the super long bootup times on first launch after a new build
