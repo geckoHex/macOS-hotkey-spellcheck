@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, Tray, Menu, shel
 const path = require('path');
 const nspell = require('nspell');
 const fs = require('fs');
+const { spawn, exec } = require('child_process');
 
 // Startup timing
 const startupTiming = {
@@ -37,6 +38,79 @@ let spellChecker;
 let tray;
 let currentHotkey = 'Shift+Command+O';
 let soundEnabled = true; // Re-enable sound with the fixed asset loading
+let previousActiveApp = null; // Track the previously active application
+
+// Function to capture the currently active application (macOS only)
+async function captureActiveApp() {
+  if (process.platform !== 'darwin') return;
+  
+  try {
+    const appleScript = `
+      tell application "System Events"
+        set frontApp to first application process whose frontmost is true
+        return name of frontApp
+      end tell
+    `;
+    
+    return new Promise((resolve, reject) => {
+      exec(`osascript -e '${appleScript}'`, { timeout: 2000 }, (error, stdout, stderr) => {
+        if (error) {
+          console.error('Error capturing active app:', error);
+          resolve(null);
+        } else {
+          const appName = stdout.trim();
+          // Filter out our own app names and system processes
+          if (appName && 
+              appName !== 'Spellcheck' && 
+              appName !== 'Electron' && 
+              appName !== 'System Events' &&
+              appName !== 'Finder' &&
+              !appName.includes('Helper')) {
+            console.log('Captured active app:', appName);
+            resolve(appName);
+          } else {
+            resolve(null);
+          }
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Error in captureActiveApp:', error);
+    return null;
+  }
+}
+
+// Function to restore focus to the previously active application (macOS only)
+async function restorePreviousAppFocus() {
+  if (process.platform !== 'darwin' || !previousActiveApp) return;
+  
+  try {
+    // Add a small delay to ensure our window has finished hiding
+    setTimeout(() => {
+      const appleScript = `
+        try
+          tell application "${previousActiveApp}"
+            activate
+          end tell
+        on error
+          -- Application might not be running anymore, ignore the error
+        end try
+      `;
+      
+      exec(`osascript -e '${appleScript}'`, { timeout: 2000 }, (error, stdout, stderr) => {
+        if (error) {
+          console.error('Error restoring focus to previous app:', error);
+        } else {
+          console.log('Restored focus to:', previousActiveApp);
+        }
+        // Clear the previous app after attempting to restore focus
+        previousActiveApp = null;
+      });
+    }, 100); // Small delay to ensure window hiding animation completes
+  } catch (error) {
+    console.error('Error in restorePreviousAppFocus:', error);
+  }
+}
 
 // Function to play window open sound directly from main process
 function playWindowOpenSound() {
@@ -310,7 +384,14 @@ function createWindow() {
     skipTaskbar: true,
     show: false,
     focusable: true,
-    title: 'Spell Checker'
+    title: 'Spell Checker',
+    // macOS specific settings for appearing over fullscreen apps
+    ...(process.platform === 'darwin' && {
+      level: 'screen-saver', // Higher level than fullscreen apps
+      visibleOnAllWorkspaces: true, // Show on all spaces/desktops
+      fullscreenable: false, // Prevent this window from going fullscreen
+      movable: false // Prevent accidental dragging that might affect positioning
+    })
   });
 
   logTiming('BrowserWindow created');
@@ -378,6 +459,14 @@ function createWindow() {
   mainWindow.loadFile('index.html');
   logTiming('loadFile called');
 
+  // Set additional macOS window properties after loading
+  if (process.platform === 'darwin') {
+    // Ensure window appears over fullscreen apps
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    // Ensure it's visible on all workspaces including fullscreen
+    mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  }
+
   // Prevent navigation away from the app
   mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
     event.preventDefault();
@@ -399,6 +488,8 @@ function createWindow() {
   mainWindow.on('blur', () => {
     if (mainWindow && mainWindow.isVisible()) {
       mainWindow.hide();
+      // Restore focus to the previously active app when hiding due to blur
+      restorePreviousAppFocus();
     }
   });
 
@@ -578,7 +669,7 @@ function createSettingsWindow() {
   // Center the settings window
   const { screen } = require('electron');
   const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.workAreaSize;
+  const { width, height } = primaryDisplay.workAreaSize; // Settings window should respect dock/menu bar
   const windowWidth = 500;
   const windowHeight = 500;
   
@@ -609,23 +700,47 @@ function showWindow() {
   if (mainWindow) {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
+      // Restore focus to the previously active app when hiding
+      restorePreviousAppFocus();
     } else {
+      // Capture the currently active application before showing our window
+      captureActiveApp().then(appName => {
+        if (appName) {
+          previousActiveApp = appName;
+          console.log('Will restore focus to:', appName);
+        }
+      }).catch(error => {
+        console.error('Error capturing active app:', error);
+      });
+      
       // Play window open sound immediately for best responsiveness
       playWindowOpenSound();
       
       // Position the window higher on screen
       const { screen } = require('electron');
-      const primaryDisplay = screen.getPrimaryDisplay();
-      const { width, height } = primaryDisplay.workAreaSize;
+      
+      // Get the display where the cursor is currently located for better multi-monitor support
+      const cursorPoint = screen.getCursorScreenPoint();
+      const activeDisplay = screen.getDisplayNearestPoint(cursorPoint);
+      const { width, height } = activeDisplay.bounds; // Use bounds for fullscreen compatibility
       const windowWidth = 600;
-      const windowHeight = 300; // Updated to match new window height
+      const windowHeight = 300;
+      
+      // Calculate position to appear in the upper portion of the active display
+      const x = activeDisplay.bounds.x + Math.round((width - windowWidth) / 2);
+      const y = activeDisplay.bounds.y + Math.round(height / 6); // Position in upper area
       
       mainWindow.setBounds({
-        x: Math.round((width - windowWidth) / 2),
-        y: Math.round((height - windowHeight) / 6), // Changed from /2 to /6 to move higher
+        x: x,
+        y: y,
         width: windowWidth,
         height: windowHeight
       });
+      
+      // For macOS, ensure the window appears on the current space/desktop
+      if (process.platform === 'darwin') {
+        mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+      }
       
       mainWindow.show();
       mainWindow.focus();
@@ -801,6 +916,8 @@ ipcMain.handle('set-clipboard', async (event, text) => {
 ipcMain.handle('hide-window', async () => {
   if (mainWindow) {
     mainWindow.hide();
+    // Restore focus to the previously active app when hiding programmatically
+    restorePreviousAppFocus();
   }
 });
 
@@ -882,4 +999,9 @@ ipcMain.handle('get-asset-protocol-url', async (event, assetName) => {
 
 ipcMain.handle('is-packaged', async () => {
   return app.isPackaged;
+});
+
+ipcMain.handle('restore-previous-focus', async () => {
+  restorePreviousAppFocus();
+  return true;
 });
