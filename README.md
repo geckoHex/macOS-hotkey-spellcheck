@@ -32,3 +32,35 @@ When the user incorrectly spells a word, they see this red "x" along with sugges
 ### Settings UI
 The settings menu exposes helpful parameters so the user can tweak the app how they would like. Unlike the main UI, it is a standard macOS window which can be dragged.
 ![Settings UI](readme/settings.png)
+
+## Installation
+This app is currently under development. Currently the only way to run it is to build it from source. In the future, pre-built binaries may be provided under "Releases". *Please note this app is currently only available for macOS.*
+
+### Building from Source
+1. Clone the repository
+```bash
+git clone https://github.com/geckoHex/macOS-hotkey-spellcheck.git
+cd macOS-hotkey-spellcheck
+```
+2. Install dependencies
+```bash
+npm i
+```
+3. Build the app
+```bash
+npm run build
+```
+
+4. Use Finder to open the `dist/` directory, double-click the disk image, and drag the app to your Applications folder.
+
+### First Run
+Because this app is not signed, macOS will prevent it from being opened the first time. When you first try to open it, macOS will block the app from running. To fix this, follow these steps:
+1. Close the warning popup (do not click "Move to Trash")
+2. Open System Settings
+3. Navigate to "Privacy & Security"
+4. Scroll to the bottom
+5. Click "Allow Anyway" next to the message about the blocked app
+
+Please also note that the first time you install the app as while as after subsequent updates the app may take some time to launch as macOS performs its own checks. This is normal behavior. Quitting and relaunching in day-to-day use should not encounter this slowdown.
+
+When you first launch the app, you may want to adjust the settings to your preference. You can access the settings menu from the menu bar icon. If you'd like, you can rearrange the menu bar icon's position by command and dragging the icon.
