@@ -7,7 +7,7 @@ let mainWindow;
 let settingsWindow;
 let spellChecker;
 let tray;
-let currentHotkey = 'Shift+Control+Option+Command+O';
+let currentHotkey = 'Shift+Command+O';
 
 // Configuration management
 const configPath = path.join(app.getPath('userData'), 'config.json');
@@ -154,6 +154,11 @@ function createSettingsWindow() {
     return;
   }
 
+  // Hide the main window when settings are opened
+  if (mainWindow && mainWindow.isVisible()) {
+    mainWindow.hide();
+  }
+
   settingsWindow = new BrowserWindow({
     width: 500,
     height: 500,
@@ -166,17 +171,16 @@ function createSettingsWindow() {
     frame: true,
     transparent: false,
     alwaysOnTop: false,
-    resizable: false,
+    resizable: true,
     skipTaskbar: false,
     show: false,
     focusable: true,
     title: 'Settings',
-    parent: mainWindow,
-    modal: true,
     titleBarStyle: 'default',
-    minimizable: false,
-    maximizable: false,
-    fullscreenable: false
+    minimizable: true,
+    maximizable: true,
+    fullscreenable: false,
+    hasShadow: true
   });
 
   settingsWindow.loadFile('settings.html');
@@ -405,4 +409,8 @@ ipcMain.handle('close-settings', async () => {
   if (settingsWindow) {
     settingsWindow.close();
   }
+});
+
+ipcMain.handle('open-settings', async () => {
+  createSettingsWindow();
 });

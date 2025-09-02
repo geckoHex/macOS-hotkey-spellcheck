@@ -216,7 +216,7 @@ hotkeyModal.addEventListener('click', (e) => {
     }
 });
 
-// Global escape key to close modal or settings
+// Global escape key to close modal
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (!hotkeyModal.classList.contains('hidden')) {

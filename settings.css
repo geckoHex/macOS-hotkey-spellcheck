@@ -11,6 +11,8 @@ body {
     -webkit-app-region: no-drag;
     overflow: hidden;
     font-size: 13px;
+    margin: 0;
+    padding: 0;
 }
 
 .settings-container {
@@ -25,7 +27,6 @@ body {
     background: #ffffff;
     border-bottom: 1px solid #e5e5e7;
     padding: 20px 20px 16px 20px;
-    -webkit-app-region: drag;
     position: relative;
 }
 
@@ -35,15 +36,6 @@ body {
     color: #1d1d1f;
     margin: 0;
     text-align: center;
-}
-
-.window-controls {
-    position: absolute;
-    left: 20px;
-    top: 20px;
-    width: 60px;
-    height: 20px;
-    -webkit-app-region: no-drag;
 }
 
 .settings-main {

@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Settings APIs
   getSettings: () => ipcRenderer.invoke('get-settings'),
   updateHotkey: (hotkey) => ipcRenderer.invoke('update-hotkey', hotkey),
-  closeSettings: () => ipcRenderer.invoke('close-settings')
+  closeSettings: () => ipcRenderer.invoke('close-settings'),
+  openSettings: () => ipcRenderer.invoke('open-settings')
 });

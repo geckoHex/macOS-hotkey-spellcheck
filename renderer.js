@@ -35,6 +35,13 @@ document.addEventListener('keydown', async (e) => {
         await window.electronAPI.hideWindow();
         return;
     }
+    
+    // Handle Cmd+, to open settings (only when floating input is active)
+    if ((e.metaKey || e.cmdKey) && e.key === ',') {
+        e.preventDefault();
+        await window.electronAPI.openSettings();
+        return;
+    }
 });
 
 // Handle keyboard navigation for suggestions
