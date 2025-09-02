@@ -8,7 +8,7 @@ let settingsWindow;
 let spellChecker;
 let tray;
 let currentHotkey = 'Shift+Command+O';
-let soundEnabled = true; // Default to sound enabled
+let soundEnabled = false; // Default to sound disabled due to production issues
 
 // Function to play window open sound directly from main process
 function playWindowOpenSound() {
@@ -16,6 +16,7 @@ function playWindowOpenSound() {
   
   try {
     const audioPath = path.join(__dirname, 'assets', 'window-open.mp3');
+    
     if (fs.existsSync(audioPath)) {
       // Use shell.openPath or fallback to system sound
       if (process.platform === 'darwin') {
@@ -44,6 +45,7 @@ function playItemHoverSound() {
   
   try {
     const audioPath = path.join(__dirname, 'assets', 'item-hover.mp3');
+    
     if (fs.existsSync(audioPath)) {
       if (process.platform === 'darwin') {
         // On macOS, use afplay for instant audio playback
@@ -740,4 +742,34 @@ ipcMain.handle('play-incorrect-sound', async () => {
 
 ipcMain.handle('play-copy-sound', async () => {
   playCopySound();
+});
+
+ipcMain.handle('get-asset-path', async (event, assetName) => {
+  return path.join(__dirname, 'assets', assetName);
+});
+
+ipcMain.handle('get-asset-data-url', async (event, assetName) => {
+  try {
+    const assetPath = path.join(__dirname, 'assets', assetName);
+    
+    if (fs.existsSync(assetPath)) {
+      const data = fs.readFileSync(assetPath);
+      const mimeType = assetName.endsWith('.mp3') ? 'audio/mpeg' : 'application/octet-stream';
+      const dataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
+      return dataUrl;
+    } else {
+      throw new Error(`Asset not found: ${assetName}`);
+    }
+  } catch (error) {
+    console.error('Error loading asset:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('get-asset-protocol-url', async (event, assetName) => {
+  return `spellcheck-asset://${assetName}`;
+});
+
+ipcMain.handle('is-packaged', async () => {
+  return app.isPackaged;
 });

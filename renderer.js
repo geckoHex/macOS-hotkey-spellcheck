@@ -8,7 +8,7 @@ const resultContent = document.getElementById('resultContent');
 let selectedSuggestionIndex = -1;
 let suggestions = [];
 let lastHoverTime = 0; // For debouncing hover sounds
-let soundEnabled = true; // Track sound setting
+let soundEnabled = false; // Track sound setting - disabled due to production issues
 
 // Preload audio for instant playback
 let windowOpenAudio = null;
@@ -18,45 +18,78 @@ let incorrectAudio = null;
 let copyAudio = null;
 
 // Preload the window open sound
-function preloadAudio() {
+async function preloadAudio() {
     try {
-        const audioPath = './assets/window-open.mp3';
-        windowOpenAudio = new Audio(audioPath);
-        windowOpenAudio.volume = 0.5;
-        windowOpenAudio.preload = 'auto';
+        // Note: Audio is currently disabled due to production build issues
+        // Check if we're in a packaged (production) app
+        const isPackaged = await window.electronAPI.isPackaged();
         
-        // Load the audio file
-        windowOpenAudio.load();
+        if (isPackaged) {
+            // In production, use data URLs from main process
+            const windowOpenDataUrl = await window.electronAPI.getAssetDataUrl('window-open.mp3');
+            windowOpenAudio = new Audio(windowOpenDataUrl);
+            windowOpenAudio.volume = 0.5;
+            windowOpenAudio.preload = 'auto';
+            windowOpenAudio.load();
+            
+            const hoverAudioDataUrl = await window.electronAPI.getAssetDataUrl('item-hover.mp3');
+            itemHoverAudio = new Audio(hoverAudioDataUrl);
+            itemHoverAudio.volume = 0.3;
+            itemHoverAudio.preload = 'auto';
+            itemHoverAudio.load();
+            
+            const correctAudioDataUrl = await window.electronAPI.getAssetDataUrl('right.mp3');
+            correctAudio = new Audio(correctAudioDataUrl);
+            correctAudio.volume = 0.4;
+            correctAudio.preload = 'auto';
+            correctAudio.load();
+            
+            const incorrectAudioDataUrl = await window.electronAPI.getAssetDataUrl('wrong.mp3');
+            incorrectAudio = new Audio(incorrectAudioDataUrl);
+            incorrectAudio.volume = 0.4;
+            incorrectAudio.preload = 'auto';
+            incorrectAudio.load();
+            
+            const copyAudioDataUrl = await window.electronAPI.getAssetDataUrl('copy.mp3');
+            copyAudio = new Audio(copyAudioDataUrl);
+            copyAudio.volume = 0.4;
+            copyAudio.preload = 'auto';
+            copyAudio.load();
+            
+        } else {
+            // In development, use relative paths
+            const audioPath = './assets/window-open.mp3';
+            windowOpenAudio = new Audio(audioPath);
+            windowOpenAudio.volume = 0.5;
+            windowOpenAudio.preload = 'auto';
+            windowOpenAudio.load();
+            
+            const hoverAudioPath = './assets/item-hover.mp3';
+            itemHoverAudio = new Audio(hoverAudioPath);
+            itemHoverAudio.volume = 0.3;
+            itemHoverAudio.preload = 'auto';
+            itemHoverAudio.load();
+            
+            const correctAudioPath = './assets/right.mp3';
+            correctAudio = new Audio(correctAudioPath);
+            correctAudio.volume = 0.4;
+            correctAudio.preload = 'auto';
+            correctAudio.load();
+            
+            const incorrectAudioPath = './assets/wrong.mp3';
+            incorrectAudio = new Audio(incorrectAudioPath);
+            incorrectAudio.volume = 0.4;
+            incorrectAudio.preload = 'auto';
+            incorrectAudio.load();
+            
+            const copyAudioPath = './assets/copy.mp3';
+            copyAudio = new Audio(copyAudioPath);
+            copyAudio.volume = 0.4;
+            copyAudio.preload = 'auto';
+            copyAudio.load();
+        }
         
-        // Preload hover sound
-        const hoverAudioPath = './assets/item-hover.mp3';
-        itemHoverAudio = new Audio(hoverAudioPath);
-        itemHoverAudio.volume = 0.3; // Slightly quieter for hover sound
-        itemHoverAudio.preload = 'auto';
-        itemHoverAudio.load();
-        
-        // Preload correct sound
-        const correctAudioPath = './assets/right.mp3';
-        correctAudio = new Audio(correctAudioPath);
-        correctAudio.volume = 0.4;
-        correctAudio.preload = 'auto';
-        correctAudio.load();
-        
-        // Preload incorrect sound
-        const incorrectAudioPath = './assets/wrong.mp3';
-        incorrectAudio = new Audio(incorrectAudioPath);
-        incorrectAudio.volume = 0.4;
-        incorrectAudio.preload = 'auto';
-        incorrectAudio.load();
-        
-        // Preload copy sound
-        const copyAudioPath = './assets/copy.mp3';
-        copyAudio = new Audio(copyAudioPath);
-        copyAudio.volume = 0.4;
-        copyAudio.preload = 'auto';
-        copyAudio.load();
-        
-        console.log('Audio preloaded successfully');
+        console.log('Audio preloaded (but disabled)');
     } catch (error) {
         console.error('Error preloading audio:', error);
     }
@@ -455,15 +488,15 @@ function showIncorrectResult(word, suggestionsList) {
 
 window.addEventListener('DOMContentLoaded', async () => {
     // Preload audio for instant playback
-    preloadAudio();
+    await preloadAudio();
     
-    // Load sound setting
+    // Load sound setting (disabled due to production issues)
     try {
         const settings = await window.electronAPI.getSettings();
-        soundEnabled = settings.soundEnabled !== undefined ? settings.soundEnabled : true;
+        soundEnabled = false; // Always disabled for now
     } catch (error) {
         console.error('Failed to load sound setting:', error);
-        soundEnabled = true;
+        soundEnabled = false;
     }
     
     wordInput.focus();

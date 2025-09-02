@@ -4,7 +4,7 @@
 - [x] Make menu bar icon open/ close app (right click for settings)
 - [x] Close input bar when clicked out of
 
-- [x] sounds
+- [~] sounds (disabled due to production build issues)
 - [ ] more clear selector UI
 - [ ] more clear copy message
 
@@ -14,4 +14,5 @@
 - [ ] use mic to get word (STT)
 - [ ] add releases to github
 - [ ] style dmg background
+- [ ] fix sound system for production builds
 - [ ] add auto spell checker and notify user if they might have spelled a word wrong

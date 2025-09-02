@@ -21,5 +21,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateHotkey: (hotkey) => ipcRenderer.invoke('update-hotkey', hotkey),
   updateSoundSetting: (enabled) => ipcRenderer.invoke('update-sound-setting', enabled),
   closeSettings: () => ipcRenderer.invoke('close-settings'),
-  openSettings: () => ipcRenderer.invoke('open-settings')
+  openSettings: () => ipcRenderer.invoke('open-settings'),
+  
+  // Asset path API
+  getAssetPath: (assetName) => ipcRenderer.invoke('get-asset-path', assetName),
+  getAssetDataUrl: (assetName) => ipcRenderer.invoke('get-asset-data-url', assetName),
+  getAssetProtocolUrl: (assetName) => ipcRenderer.invoke('get-asset-protocol-url', assetName),
+  isPackaged: () => ipcRenderer.invoke('is-packaged')
 });
