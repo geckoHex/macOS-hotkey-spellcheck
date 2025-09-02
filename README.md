@@ -65,6 +65,20 @@ Please also note that the first time you install the app as while as after subse
 
 When you first launch the app, you may want to adjust the settings to your preference. You can access the settings menu from the menu bar icon. If you'd like, you can rearrange the menu bar icon's position by command and dragging the icon.
 
+## Roadmap
+| Feature               | Description                                                         | Status       | Priority   |
+|-----------------------|---------------------------------------------------------------------|--------------|------------|
+| Pasting               | Allow users to paste text into the spellcheck UI                    | Next Up      | High       |
+| Deploy App            | Package and deploy the app as a `.dmg` on GitHub                    | In-Progress  | High       |
+| Auto paste            | Automatically paste suggestion into the user's current app          | Planned      | Medium     |
+| TTS                   | Implement text-to-speech functionality                              | Planned      | Medium     |
+| STT                   | Implement speech-to-text functionality                              | Planned      | Medium     |
+| Definitions           | Allow the user to see a word's definition                           | Planned      | Low        |
+| Background checker    | Check the user's spelling in the background and provide suggestions | Future       | Low        |
+| UI Redesign           | Redesign the user interface for improved aesthetic                  | Future       | Low        |
+
+**NOTE:** A list of historical feature completions are available in repo history under `TODO.md`
+
 ## Credits
 This app wouldn't be possible without the following assets. All assets used are used under their appropriate licenses.
 
