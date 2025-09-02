@@ -1,6 +1,6 @@
 {
   "name": "electron-spellchecker",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A simple Electron app for spell checking words",
   "main": "main.js",
   "scripts": {
