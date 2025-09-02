@@ -278,11 +278,28 @@ body {
     background: #d1d1d6;
 }
 
+.hotkey-input.recording {
+    border-color: #ff9500;
+    box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
+    background: #fffbf0;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
 /* Success state for input */
 .hotkey-input.success {
     border-color: #30d158;
     box-shadow: 0 0 0 3px rgba(48, 209, 88, 0.1);
     background: #f0fff4;
+}
+
+/* Pulse animation for recording state */
+@keyframes pulse {
+    0%, 100% { 
+        box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
+    }
+    50% { 
+        box-shadow: 0 0 0 6px rgba(255, 149, 0, 0.2);
+    }
 }
 
 /* Shake animation for invalid input */

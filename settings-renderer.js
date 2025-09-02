@@ -48,6 +48,7 @@ function formatHotkeyForInput(keys) {
         switch(key) {
             case 'Meta':
             case 'Cmd':
+            case 'Command':
                 if (!modifiers.includes('Command')) modifiers.push('Command');
                 break;
             case 'Control':
@@ -62,7 +63,11 @@ function formatHotkeyForInput(keys) {
                 if (!modifiers.includes('Shift')) modifiers.push('Shift');
                 break;
             default:
-                if (key.length === 1 || ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(key)) {
+                // Handle function keys and other special keys
+                if (key.match(/^F\d+$/) || 
+                    ['Space', 'Enter', 'Tab', 'Backspace', 'Delete', 'Escape', 'Up', 'Down', 'Left', 'Right'].includes(key) ||
+                    key.startsWith('Numpad') ||
+                    (key.length === 1)) {
                     mainKey = key.toUpperCase();
                 }
                 break;
@@ -105,10 +110,14 @@ function isValidHotkey(hotkey) {
 function showHotkeyModal() {
     hotkeyModal.classList.remove('hidden');
     hotkeyInput.value = '';
-    hotkeyInput.placeholder = 'Press your desired key combination...';
+    hotkeyInput.placeholder = 'Press and hold your key combination...';
     saveHotkeyBtn.disabled = true;
     recordedKeys = [];
     isRecording = true;
+    
+    // Clear any previous states
+    hotkeyInput.classList.remove('success', 'recording');
+    hotkeyInput.dataset.hotkey = '';
     
     // Focus the input to capture key events
     setTimeout(() => {
@@ -130,11 +139,75 @@ function handleKeyDown(e) {
     e.preventDefault();
     e.stopPropagation();
     
-    const key = e.key;
+    // Clear any previous keys and build from the current event
+    recordedKeys = [];
     
-    // Add key to recorded keys if not already present
-    if (!recordedKeys.includes(key)) {
-        recordedKeys.push(key);
+    // Get modifier states from the event directly
+    if (e.shiftKey) recordedKeys.push('Shift');
+    if (e.ctrlKey) recordedKeys.push('Control');
+    if (e.altKey) recordedKeys.push('Option');
+    if (e.metaKey) recordedKeys.push('Command');
+    
+    // Get the base key using both e.code and e.key
+    let baseKey = '';
+    
+    // Use e.code for better key detection, but fallback to e.key
+    if (e.code) {
+        // Handle letter keys
+        if (e.code.startsWith('Key')) {
+            baseKey = e.code.slice(3); // Remove 'Key' prefix, e.g., 'KeyO' -> 'O'
+        }
+        // Handle digit keys
+        else if (e.code.startsWith('Digit')) {
+            baseKey = e.code.slice(5); // Remove 'Digit' prefix, e.g., 'Digit1' -> '1'
+        }
+        // Handle function keys
+        else if (e.code.startsWith('F') && /^F\d+$/.test(e.code)) {
+            baseKey = e.code; // F1, F2, etc.
+        }
+        // Handle special keys
+        else if (['Space', 'Enter', 'Tab', 'Backspace', 'Delete', 'Escape'].includes(e.code)) {
+            baseKey = e.code;
+        }
+        // Handle arrow keys
+        else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+            baseKey = e.code.replace('Arrow', ''); // ArrowUp -> Up
+        }
+        // Handle numpad keys
+        else if (e.code.startsWith('Numpad')) {
+            baseKey = e.code; // Keep as is for numpad keys
+        }
+        // Handle other printable keys using the location info
+        else if (e.key && e.key.length === 1 && !e.key.match(/[⌘⌃⌥⇧]/)) {
+            // For single character keys, use uppercase version
+            baseKey = e.key.toUpperCase();
+        }
+    }
+    
+    // Fallback to e.key if we couldn't determine from e.code
+    if (!baseKey && e.key && e.key.length === 1) {
+        // For modifier combinations that produce special characters,
+        // try to detect the base key
+        if (e.key.match(/[øœåß∂ƒ©˙∆˚¬…æ]/)) {
+            // Common special characters produced by modifier combinations
+            const specialCharMap = {
+                'ø': 'O', 'œ': 'Q', 'å': 'A', 'ß': 'S', '∂': 'D',
+                'ƒ': 'F', '©': 'G', '˙': 'H', '∆': 'J', '˚': 'K',
+                '¬': 'L', '…': ';', 'æ': "'", '∑': 'W', '´': 'E',
+                '®': 'R', '†': 'T', '¥': 'Y', '¨': 'U', 'ˆ': 'I',
+                'π': 'P', '¡': '1', '™': '2', '£': '3', '¢': '4',
+                '∞': '5', '§': '6', '¶': '7', '•': '8', 'ª': '9',
+                'º': '0'
+            };
+            baseKey = specialCharMap[e.key] || e.key.toUpperCase();
+        } else {
+            baseKey = e.key.toUpperCase();
+        }
+    }
+    
+    // Add the base key if we found one and it's not a modifier
+    if (baseKey && !['SHIFT', 'CONTROL', 'ALT', 'META', 'COMMAND', 'OPTION'].includes(baseKey.toUpperCase())) {
+        recordedKeys.push(baseKey);
     }
     
     // Update input display in real-time
@@ -144,11 +217,13 @@ function handleKeyDown(e) {
         hotkeyInput.dataset.hotkey = tempHotkey;
         saveHotkeyBtn.disabled = false;
         hotkeyInput.classList.add('success');
+        hotkeyInput.classList.remove('recording');
     } else {
-        hotkeyInput.value = '';
+        hotkeyInput.value = 'Keep holding keys...';
         hotkeyInput.dataset.hotkey = '';
         saveHotkeyBtn.disabled = true;
         hotkeyInput.classList.remove('success');
+        hotkeyInput.classList.add('recording');
     }
 }
 
@@ -158,6 +233,16 @@ function handleKeyUp(e) {
     
     e.preventDefault();
     e.stopPropagation();
+    
+    // Small delay to allow user to see the complete combination
+    // before finalizing the recording
+    setTimeout(() => {
+        if (isRecording && hotkeyInput.dataset.hotkey && hotkeyInput.classList.contains('success')) {
+            // Optional: Auto-finalize after a short delay if we have a valid combination
+            // This is commented out to require explicit save action
+            // saveHotkey();
+        }
+    }, 500);
 }
 
 // Save hotkey settings
