@@ -14,3 +14,4 @@
 - [ ] use mic to get word (STT)
 - [ ] add releases to github
 - [ ] style dmg background
+- [ ] add auto spell checker and notify user if they might have spelled a word wrong
