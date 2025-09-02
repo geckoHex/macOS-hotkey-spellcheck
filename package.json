@@ -4,7 +4,10 @@
   "description": "A simple Electron app for spell checking words",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder",
+    "dist": "electron-builder --publish=never",
+    "pack": "electron-builder --dir"
   },
   "keywords": [
     "electron",
@@ -14,10 +17,58 @@
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^26.0.0"
+    "electron": "^26.0.0",
+    "electron-builder": "^24.13.3"
   },
   "dependencies": {
     "dictionary-en": "^4.0.0",
     "nspell": "^2.1.5"
+  },
+  "build": {
+    "appId": "com.yourname.spellcheck",
+    "productName": "Spellcheck",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/electron/**/*"
+    ],
+    "mac": {
+      "icon": "assets/AppIcon.icns",
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64"]
+        }
+      ],
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "entitlements": null,
+      "entitlementsInherit": null
+    },
+    "dmg": {
+      "title": "Spellcheck",
+      "backgroundColor": "#ffffff",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ]
+    }
   }
 }
