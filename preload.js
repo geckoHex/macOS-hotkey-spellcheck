@@ -27,5 +27,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAssetPath: (assetName) => ipcRenderer.invoke('get-asset-path', assetName),
   getAssetDataUrl: (assetName) => ipcRenderer.invoke('get-asset-data-url', assetName),
   getAssetProtocolUrl: (assetName) => ipcRenderer.invoke('get-asset-protocol-url', assetName),
-  isPackaged: () => ipcRenderer.invoke('is-packaged')
+  isPackaged: () => ipcRenderer.invoke('is-packaged'),
+  
+  // App info API
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  getAppEnvironment: () => ipcRenderer.invoke('get-app-environment')
 });

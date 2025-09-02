@@ -1005,3 +1005,20 @@ ipcMain.handle('restore-previous-focus', async () => {
   restorePreviousAppFocus();
   return true;
 });
+
+ipcMain.handle('get-app-version', async () => {
+  try {
+    const packageJsonPath = path.join(__dirname, 'package.json');
+    const packageData = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    return packageData.version;
+  } catch (error) {
+    console.error('Error reading app version:', error);
+    return '0.0.0'; // Fallback version
+  }
+});
+
+ipcMain.handle('get-app-environment', async () => {
+  // app.isPackaged is true when running from a built app (dmg install)
+  // app.isPackaged is false when running with electron . or npm start
+  return app.isPackaged ? 'PROD' : 'DEV';
+});

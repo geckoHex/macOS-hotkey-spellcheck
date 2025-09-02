@@ -1,6 +1,6 @@
 {
   "name": "spellcheck",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "A modern, hotkey accessible spelling helper for macOS.",
   "main": "main.js",
   "scripts": {

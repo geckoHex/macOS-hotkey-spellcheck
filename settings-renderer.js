@@ -23,12 +23,40 @@ async function initializeSettings() {
         soundToggle.disabled = false; // Enable the toggle
         
         updateCurrentHotkeyDisplay();
+        
+        // Load and display app version dynamically
+        await updateAppVersion();
     } catch (error) {
         console.error('Failed to load settings:', error);
         currentHotkey = 'Shift+Control+Option+Command+O';
         soundToggle.checked = true; // Default to enabled
         soundToggle.disabled = false; // Enable the toggle
         updateCurrentHotkeyDisplay();
+        
+        // Try to load version even if settings failed
+        try {
+            await updateAppVersion();
+        } catch (versionError) {
+            console.error('Failed to load app version:', versionError);
+        }
+    }
+}
+
+// Update app version display
+async function updateAppVersion() {
+    try {
+        const [version, environment] = await Promise.all([
+            window.electronAPI.getAppVersion(),
+            window.electronAPI.getAppEnvironment()
+        ]);
+        
+        const versionElement = document.querySelector('.app-version');
+        if (versionElement) {
+            versionElement.textContent = `Spell Checker ${version} | ${environment}`;
+        }
+    } catch (error) {
+        console.error('Failed to load app version/environment:', error);
+        // Keep the existing hardcoded version as fallback
     }
 }
 
