@@ -4,7 +4,7 @@
 - [x] Make menu bar icon open/ close app (right click for settings)
 - [x] Close input bar when clicked out of
 
-- [~] sounds (disabled due to production build issues)
+- [ ] sounds (disabled due to production build issues)
 - [ ] more clear selector UI
 - [ ] more clear copy message
 
@@ -17,3 +17,5 @@
 - [ ] fix sound system for production builds
 - [ ] add auto spell checker and notify user if they might have spelled a word wrong
 - [ ] Investigate and fix the super long bootup times on first launch after a new build
+- [ ] Investigate and fix keyboard shortcut selector not working (maybe because of app focus issues?)
+- [ ] allow spellcheck ui window to appear over other fullscreen content
