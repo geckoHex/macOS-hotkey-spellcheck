@@ -88,7 +88,8 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      spellcheck: false
+      spellcheck: false,
+      devTools: false // Disable dev tools completely
     },
     frame: false,
     transparent: true,
@@ -100,7 +101,77 @@ function createWindow() {
     title: 'Spell Checker'
   });
 
+  // Disable all menu shortcuts by setting an empty menu
+  mainWindow.setMenu(null);
+
+  // Prevent navigation and block all browser shortcuts
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    // Block all shortcuts that use Cmd key (or Ctrl on other platforms)
+    if (input.meta || input.control) {
+      // Allow only our custom settings shortcut (Cmd+,)
+      if (input.key === ',' && input.meta) {
+        return; // Allow this one
+      }
+      // Block everything else
+      event.preventDefault();
+    }
+    
+    // Block F keys that could open dev tools or other functions
+    if (input.key.startsWith('F') && input.key.length <= 3) {
+      event.preventDefault();
+    }
+    
+    // Block other problematic keys
+    if (input.key === 'F12' || 
+        (input.key === 'I' && input.meta && input.shift) || // Dev tools
+        (input.key === 'J' && input.meta && input.alt) ||   // Dev tools
+        (input.key === 'C' && input.meta && input.shift) || // Dev tools
+        input.key === 'F5' ||   // Refresh
+        input.key === 'F11' ||  // Fullscreen
+        (input.key === 'R' && input.meta) || // Refresh
+        (input.key === 'W' && input.meta) || // Close window
+        (input.key === 'M' && input.meta) || // Minimize
+        (input.key === 'Q' && input.meta) || // Quit (we handle this differently)
+        (input.key === 'H' && input.meta) || // Hide
+        (input.key === 'N' && input.meta) || // New window
+        (input.key === 'T' && input.meta) || // New tab
+        (input.key === 'P' && input.meta) || // Print
+        (input.key === 'S' && input.meta) || // Save
+        (input.key === 'O' && input.meta) || // Open
+        (input.key === 'F' && input.meta) || // Find
+        (input.key === 'G' && input.meta) || // Find next
+        (input.key === 'Z' && input.meta) || // Undo
+        (input.key === 'Y' && input.meta) || // Redo
+        (input.key === 'A' && input.meta) || // Select all
+        (input.key === 'C' && input.meta) || // Copy (except our clipboard functionality)
+        (input.key === 'V' && input.meta) || // Paste
+        (input.key === 'X' && input.meta) || // Cut
+        (input.key === '+' && input.meta) || // Zoom in
+        (input.key === '-' && input.meta) || // Zoom out
+        (input.key === '0' && input.meta)    // Reset zoom
+       ) {
+      event.preventDefault();
+    }
+  });
+
   mainWindow.loadFile('index.html');
+
+  // Prevent navigation away from the app
+  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    event.preventDefault();
+  });
+
+  // Prevent new window creation
+  mainWindow.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
+  });
+
+  // Disable zoom
+  mainWindow.webContents.setZoomFactor(1.0);
+  mainWindow.webContents.on('zoom-changed', (event) => {
+    event.preventDefault();
+    mainWindow.webContents.setZoomFactor(1.0);
+  });
 
   spellChecker = new ElectronSpellChecker();
   spellChecker.initialize();
@@ -166,7 +237,8 @@ function createSettingsWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      spellcheck: false
+      spellcheck: false,
+      devTools: false // Disable dev tools for settings window too
     },
     frame: true,
     transparent: false,
@@ -183,7 +255,69 @@ function createSettingsWindow() {
     hasShadow: true
   });
 
+  // Disable menu for settings window as well
+  settingsWindow.setMenu(null);
+
+  // Apply the same input blocking to settings window
+  settingsWindow.webContents.on('before-input-event', (event, input) => {
+    // Block all shortcuts that use Cmd key (or Ctrl on other platforms)
+    if (input.meta || input.control) {
+      // Allow window close (Cmd+W) for settings window since it has normal window controls
+      if (input.key === 'w' || input.key === 'W') {
+        return; // Allow window close for settings
+      }
+      // Block everything else
+      event.preventDefault();
+    }
+    
+    // Block F keys and other problematic keys (same as main window)
+    if (input.key.startsWith('F') && input.key.length <= 3) {
+      event.preventDefault();
+    }
+    
+    if (input.key === 'F12' || 
+        (input.key === 'I' && input.meta && input.shift) ||
+        (input.key === 'J' && input.meta && input.alt) ||
+        (input.key === 'C' && input.meta && input.shift) ||
+        input.key === 'F5' ||
+        input.key === 'F11' ||
+        (input.key === 'R' && input.meta) ||
+        (input.key === 'M' && input.meta) ||
+        (input.key === 'Q' && input.meta) ||
+        (input.key === 'H' && input.meta) ||
+        (input.key === 'N' && input.meta) ||
+        (input.key === 'T' && input.meta) ||
+        (input.key === 'P' && input.meta) ||
+        (input.key === 'S' && input.meta) ||
+        (input.key === 'O' && input.meta) ||
+        (input.key === 'F' && input.meta) ||
+        (input.key === 'G' && input.meta) ||
+        (input.key === 'Z' && input.meta) ||
+        (input.key === 'Y' && input.meta) ||
+        (input.key === '+' && input.meta) ||
+        (input.key === '-' && input.meta) ||
+        (input.key === '0' && input.meta)
+       ) {
+      event.preventDefault();
+    }
+  });
+
   settingsWindow.loadFile('settings.html');
+
+  // Apply same protections to settings window
+  settingsWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    event.preventDefault();
+  });
+
+  settingsWindow.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
+  });
+
+  settingsWindow.webContents.setZoomFactor(1.0);
+  settingsWindow.webContents.on('zoom-changed', (event) => {
+    event.preventDefault();
+    settingsWindow.webContents.setZoomFactor(1.0);
+  });
 
   // Center the settings window
   const { screen } = require('electron');

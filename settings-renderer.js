@@ -302,12 +302,64 @@ hotkeyModal.addEventListener('click', (e) => {
     }
 });
 
-// Global escape key to close modal
+// Global escape key to close modal and block other shortcuts
 document.addEventListener('keydown', (e) => {
+    // Block all system and browser shortcuts except allowed ones
+    if (e.metaKey || e.ctrlKey) {
+        // Allow Cmd+W to close settings window
+        if ((e.key === 'w' || e.key === 'W') && (e.metaKey || e.ctrlKey)) {
+            return; // Allow window close
+        }
+        
+        // If we're recording hotkeys, allow them through
+        if (isRecording) {
+            return; // Let the hotkey recording handle it
+        }
+        
+        // Block all other Cmd/Ctrl combinations
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+    
+    // Block function keys (except when recording)
+    if (e.key.startsWith('F') && e.key.length <= 3 && !isRecording) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+    
+    // Handle escape key normally
     if (e.key === 'Escape') {
         if (!hotkeyModal.classList.contains('hidden')) {
             hideHotkeyModal();
         }
+    }
+});
+
+// Add additional protection against context menu and other events
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+// Prevent drag and drop
+document.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+// Prevent unwanted text selection
+document.addEventListener('selectstart', (e) => {
+    // Allow selection only in the hotkey input field when recording
+    if (e.target !== hotkeyInput || !isRecording) {
+        e.preventDefault();
+        return false;
     }
 });
 

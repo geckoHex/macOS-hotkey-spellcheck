@@ -24,6 +24,29 @@ function shakeInput() {
 
 // Handle global escape key to close and reset
 document.addEventListener('keydown', async (e) => {
+    // Block all system and browser shortcuts except allowed ones
+    if (e.metaKey || e.ctrlKey) {
+        // Allow only our custom settings shortcut (Cmd+,)
+        if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            await window.electronAPI.openSettings();
+            return;
+        }
+        
+        // Block all other Cmd/Ctrl combinations
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+    
+    // Block function keys
+    if (e.key.startsWith('F') && e.key.length <= 3) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+    
+    // Handle escape key normally
     if (e.key === 'Escape') {
         e.preventDefault();
         // Reset the UI
@@ -35,12 +58,31 @@ document.addEventListener('keydown', async (e) => {
         await window.electronAPI.hideWindow();
         return;
     }
-    
-    // Handle Cmd+, to open settings (only when floating input is active)
-    if ((e.metaKey || e.cmdKey) && e.key === ',') {
+});
+
+// Add additional protection against context menu and other events
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+// Prevent drag and drop
+document.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+// Prevent text selection that might interfere
+document.addEventListener('selectstart', (e) => {
+    // Allow selection only in the input field
+    if (e.target !== wordInput) {
         e.preventDefault();
-        await window.electronAPI.openSettings();
-        return;
+        return false;
     }
 });
 
