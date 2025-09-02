@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Spell Checker</title>
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="settings-container">
+        <header class="settings-header">
+            <div class="window-controls">
+                <!-- Window controls will be handled by Electron -->
+            </div>
+            <h1>Settings</h1>
+        </header>
+        
+        <main class="settings-main">
+            <div class="settings-section">
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <label>Keyboard Shortcut</label>
+                        <p class="setting-description">Global hotkey to open the spell checker</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="hotkey-display-container">
+                            <div id="currentHotkey" class="hotkey-display">⇧⌃⌥⌘O</div>
+                            <button id="changeHotkeyBtn" class="change-btn">Change...</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="settings-footer">
+            <div class="app-info">
+                <span class="app-version">Spell Checker 1.0.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Hotkey Recording Modal -->
+    <div id="hotkeyModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Record New Hotkey</h3>
+            </div>
+            <div class="modal-body">
+                <div class="recording-area">
+                    <input 
+                        type="text" 
+                        id="hotkeyInput" 
+                        class="hotkey-input"
+                        placeholder="Press your desired key combination..."
+                        readonly
+                    >
+                    <p class="recording-hint">Press and hold your desired key combination</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelBtn" class="btn-secondary">Cancel</button>
+                <button id="saveHotkeyBtn" class="btn-primary" disabled>Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="settings-renderer.js"></script>
+</body>
+</html>

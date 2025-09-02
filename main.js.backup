@@ -231,6 +231,13 @@ function showWindow() {
   }
 }
 
+// This method will be called when Electron has finished initialization
+app.whenReady().then(() => {
+  // Hide dock icon on macOS
+  if (process.platform === 'darwin') {
+    app.dock.hide();
+  }
+
 // Function to register global shortcut with current hotkey
 function registerGlobalShortcut() {
   // Unregister any existing shortcuts

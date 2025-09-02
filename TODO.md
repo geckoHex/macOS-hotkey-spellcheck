@@ -1,0 +1,3 @@
+- [ ] Disable default system hotkeys (minimize, quit)
+- [ ] Disable default electron/ chromium hotkeys (dev tools, refresh)
+- [ ] Add a better menu bar icon

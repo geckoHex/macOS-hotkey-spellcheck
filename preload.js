@@ -5,5 +5,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getClipboard: () => ipcRenderer.invoke('get-clipboard'),
   setClipboard: (text) => ipcRenderer.invoke('set-clipboard', text),
   hideWindow: () => ipcRenderer.invoke('hide-window'),
-  onFocusInput: (callback) => ipcRenderer.on('focus-input', callback)
+  onFocusInput: (callback) => ipcRenderer.on('focus-input', callback),
+  
+  // Settings APIs
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  updateHotkey: (hotkey) => ipcRenderer.invoke('update-hotkey', hotkey),
+  closeSettings: () => ipcRenderer.invoke('close-settings')
 });
