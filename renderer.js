@@ -139,7 +139,7 @@ async function selectSuggestion(suggestionElement) {
             selectedSuggestionIndex = -1;
             // Hide the window
             await window.electronAPI.hideWindow();
-        }, 500);
+        }, 0);
         
     } catch (error) {
         console.error('Failed to copy to clipboard:', error);
@@ -150,7 +150,7 @@ async function selectSuggestion(suggestionElement) {
             result.classList.add('hidden');
             selectedSuggestionIndex = -1;
             await window.electronAPI.hideWindow();
-        }, 500);
+        }, 750);
     }
 }
 
