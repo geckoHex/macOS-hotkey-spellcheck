@@ -5,7 +5,7 @@ const fs = require('fs');
 
 // Function to resolve asset paths correctly for both dev and production
 function getAssetPath(...paths) {
-  const basePath = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..');
+  const basePath = app.isPackaged ? process.resourcesPath : __dirname;
   return path.join(basePath, 'assets', ...paths);
 }
 
@@ -385,9 +385,11 @@ function createSettingsWindow() {
     return;
   }
 
-  // Hide the main window when settings are opened
-  if (mainWindow && mainWindow.isVisible()) {
-    mainWindow.hide();
+  // Show the main window when settings are opened (but keep it hidden from dock)
+  // This ensures proper key event handling for Command key combinations
+  if (mainWindow) {
+    mainWindow.show();
+    mainWindow.hide(); // Immediately hide it but keep it available for key events
   }
 
   settingsWindow = new BrowserWindow({
@@ -418,9 +420,12 @@ function createSettingsWindow() {
   // Disable menu for settings window as well
   settingsWindow.setMenu(null);
 
-  // Apply the same input blocking to settings window
+  // Apply modified input blocking to settings window - allow Command key for hotkey recording
   settingsWindow.webContents.on('before-input-event', (event, input) => {
-    // Block all shortcuts that use Cmd key (or Ctrl on other platforms)
+    // When settings window is open, we need to be more permissive with Command key
+    // to allow proper hotkey recording, especially for macOS Command combinations
+    
+    // Only block specific dangerous combinations, not all Command key usage
     if (input.meta || input.control) {
       // Allow window close (Cmd+W) for settings window since it has normal window controls
       if (input.key === 'w' || input.key === 'W') {
@@ -434,38 +439,41 @@ function createSettingsWindow() {
       if (input.key === 'Backspace' && input.meta) {
         return; // Allow Cmd+Delete
       }
-      // Block everything else
-      event.preventDefault();
+      
+      // For hotkey recording, we need to allow Command key combinations to pass through
+      // Only block specific problematic shortcuts, not all Command usage
+      const dangerousShortcuts = [
+        'r', 'R', // Cmd+R (reload)
+        'q', 'Q', // Cmd+Q (quit)
+        't', 'T', // Cmd+T (new tab)
+        'n', 'N', // Cmd+N (new window)
+        'l', 'L', // Cmd+L (location bar)
+        'd', 'D', // Cmd+D (bookmark)
+        'f', 'F', // Cmd+F (find)
+        'g', 'G', // Cmd+G (find again)
+        'h', 'H', // Cmd+H (hide)
+        'm', 'M', // Cmd+M (minimize)
+        'p', 'P', // Cmd+P (print)
+        's', 'S', // Cmd+S (save)
+        'o', 'O', // Cmd+O (open)
+        'z', 'Z', // Cmd+Z (undo)
+        'y', 'Y', // Cmd+Y (redo)
+        'x', 'X', // Cmd+X (cut)
+        'c', 'C', // Cmd+C (copy)
+        'v', 'V'  // Cmd+V (paste)
+      ];
+      
+      if (dangerousShortcuts.includes(input.key)) {
+        event.preventDefault();
+        return;
+      }
+      
+      // Allow other Command combinations to pass through for hotkey recording
+      return;
     }
     
-    // Block F keys and other problematic keys (same as main window)
+    // Block F keys and other problematic keys
     if (input.key.startsWith('F') && input.key.length <= 3) {
-      event.preventDefault();
-    }
-    
-    if (input.key === 'F12' || 
-        (input.key === 'I' && input.meta && input.shift) ||
-        (input.key === 'J' && input.meta && input.alt) ||
-        (input.key === 'C' && input.meta && input.shift) ||
-        input.key === 'F5' ||
-        input.key === 'F11' ||
-        (input.key === 'R' && input.meta) ||
-        (input.key === 'M' && input.meta) ||
-        (input.key === 'Q' && input.meta) ||
-        (input.key === 'H' && input.meta) ||
-        (input.key === 'N' && input.meta) ||
-        (input.key === 'T' && input.meta) ||
-        (input.key === 'P' && input.meta) ||
-        (input.key === 'S' && input.meta) ||
-        (input.key === 'O' && input.meta) ||
-        (input.key === 'F' && input.meta) ||
-        (input.key === 'G' && input.meta) ||
-        (input.key === 'Z' && input.meta) ||
-        (input.key === 'Y' && input.meta) ||
-        (input.key === '+' && input.meta) ||
-        (input.key === '-' && input.meta) ||
-        (input.key === '0' && input.meta)
-       ) {
       event.preventDefault();
     }
   });
@@ -508,6 +516,12 @@ function createSettingsWindow() {
 
   settingsWindow.on('closed', () => {
     settingsWindow = null;
+    
+    // Ensure main window is properly hidden when settings close
+    // This maintains the menu bar app behavior
+    if (mainWindow && mainWindow.isVisible()) {
+      mainWindow.hide();
+    }
   });
 }
 

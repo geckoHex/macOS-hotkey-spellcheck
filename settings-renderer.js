@@ -53,30 +53,28 @@ function formatHotkeyForInput(keys) {
     let mainKey = '';
     
     keys.forEach(key => {
-        switch(key) {
-            case 'Meta':
-            case 'Cmd':
-            case 'Command':
+        const upperKey = key.toUpperCase();
+        switch(upperKey) {
+            case 'META':
+            case 'CMD':
+            case 'COMMAND':
                 if (!modifiers.includes('Command')) modifiers.push('Command');
                 break;
-            case 'Control':
-            case 'Ctrl':
+            case 'CONTROL':
+            case 'CTRL':
                 if (!modifiers.includes('Control')) modifiers.push('Control');
                 break;
-            case 'Alt':
-            case 'Option':
+            case 'ALT':
+            case 'OPTION':
                 if (!modifiers.includes('Option')) modifiers.push('Option');
                 break;
-            case 'Shift':
+            case 'SHIFT':
                 if (!modifiers.includes('Shift')) modifiers.push('Shift');
                 break;
             default:
-                // Handle function keys and other special keys
-                if (key.match(/^F\d+$/) || 
-                    ['Space', 'Enter', 'Tab', 'Backspace', 'Delete', 'Escape', 'Up', 'Down', 'Left', 'Right'].includes(key) ||
-                    key.startsWith('Numpad') ||
-                    (key.length === 1)) {
-                    mainKey = key.toUpperCase();
+                // This is the main key
+                if (!mainKey) {
+                    mainKey = key;
                 }
                 break;
         }
@@ -110,7 +108,10 @@ function isValidHotkey(hotkey) {
         ['Shift', 'Control', 'Option', 'Command'].includes(part)
     ).length;
     
-    // Must have at least one modifier
+    // For macOS app, prefer combinations that include Command key
+    const hasCommand = parts.includes('Command');
+    
+    // Must have at least one modifier, and preferably Command for macOS
     return modifierCount >= 1;
 }
 
@@ -118,7 +119,7 @@ function isValidHotkey(hotkey) {
 function showHotkeyModal() {
     hotkeyModal.classList.remove('hidden');
     hotkeyInput.value = '';
-    hotkeyInput.placeholder = 'Press and hold your key combination...';
+    hotkeyInput.placeholder = 'Press Command + other keys for best macOS experience...';
     saveHotkeyBtn.disabled = true;
     recordedKeys = [];
     isRecording = true;
@@ -150,67 +151,76 @@ function handleKeyDown(e) {
     // Clear any previous keys and build from the current event
     recordedKeys = [];
     
+    // For macOS, prioritize Command key detection and ensure it's captured properly
     // Get modifier states from the event directly
     if (e.shiftKey) recordedKeys.push('Shift');
     if (e.ctrlKey) recordedKeys.push('Control');
     if (e.altKey) recordedKeys.push('Option');
-    if (e.metaKey) recordedKeys.push('Command');
+    if (e.metaKey) recordedKeys.push('Command'); // This is the key one for macOS
     
-    // Get the base key using both e.code and e.key
+    // Enhanced key detection with special focus on Command key combinations
     let baseKey = '';
     
-    // Use e.code for better key detection, but fallback to e.key
-    if (e.code) {
-        // Handle letter keys
-        if (e.code.startsWith('Key')) {
-            baseKey = e.code.slice(3); // Remove 'Key' prefix, e.g., 'KeyO' -> 'O'
-        }
-        // Handle digit keys
-        else if (e.code.startsWith('Digit')) {
-            baseKey = e.code.slice(5); // Remove 'Digit' prefix, e.g., 'Digit1' -> '1'
-        }
-        // Handle function keys
-        else if (e.code.startsWith('F') && /^F\d+$/.test(e.code)) {
-            baseKey = e.code; // F1, F2, etc.
-        }
-        // Handle special keys
-        else if (['Space', 'Enter', 'Tab', 'Backspace', 'Delete', 'Escape'].includes(e.code)) {
-            baseKey = e.code;
-        }
-        // Handle arrow keys
-        else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
-            baseKey = e.code.replace('Arrow', ''); // ArrowUp -> Up
-        }
-        // Handle numpad keys
-        else if (e.code.startsWith('Numpad')) {
-            baseKey = e.code; // Keep as is for numpad keys
-        }
-        // Handle other printable keys using the location info
-        else if (e.key && e.key.length === 1 && !e.key.match(/[⌘⌃⌥⇧]/)) {
-            // For single character keys, use uppercase version
-            baseKey = e.key.toUpperCase();
-        }
+    // Handle letter keys (A-Z) - most common with Command key
+    if (e.code && e.code.startsWith('Key') && e.code.length === 4) {
+        baseKey = e.code.slice(3); // KeyA -> A, KeyZ -> Z
     }
-    
-    // Fallback to e.key if we couldn't determine from e.code
-    if (!baseKey && e.key && e.key.length === 1) {
-        // For modifier combinations that produce special characters,
-        // try to detect the base key
-        if (e.key.match(/[øœåß∂ƒ©˙∆˚¬…æ∑´®†¥¨ˆπ¡™£¢∞§¶•ªº]/)) {
-            // Common special characters produced by modifier combinations
-            const specialCharMap = {
-                'ø': 'O', 'œ': 'Q', 'å': 'A', 'ß': 'S', '∂': 'D',
-                'ƒ': 'F', '©': 'G', '˙': 'H', '∆': 'J', '˚': 'K',
-                '¬': 'L', '…': ';', 'æ': "'", '∑': 'W', '´': 'E',
-                '®': 'R', '†': 'T', '¥': 'Y', '¨': 'U', 'ˆ': 'I',
-                'π': 'P', '¡': '1', '™': '2', '£': '3', '¢': '4',
-                '∞': '5', '§': '6', '¶': '7', '•': '8', 'ª': '9',
-                'º': '0'
-            };
-            baseKey = specialCharMap[e.key] || e.key.toUpperCase();
-        } else {
-            baseKey = e.key.toUpperCase();
-        }
+    // Handle digit keys (0-9)
+    else if (e.code && e.code.startsWith('Digit') && e.code.length === 6) {
+        baseKey = e.code.slice(5); // Digit1 -> 1, Digit0 -> 0
+    }
+    // Handle function keys (F1-F12)
+    else if (e.code && /^F\d+$/.test(e.code)) {
+        baseKey = e.code; // F1, F2, F3, etc.
+    }
+    // Handle special keys that work well with Command
+    else if (['Space', 'Tab', 'Enter', 'Escape', 'Backspace', 'Delete'].includes(e.code)) {
+        baseKey = e.code;
+    }
+    // Handle arrow keys
+    else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        baseKey = e.code.replace('Arrow', ''); // ArrowUp -> Up
+    }
+    // Handle semicolon, comma, period, slash - common with Command on macOS
+    else if (e.code === 'Semicolon') {
+        baseKey = ';';
+    }
+    else if (e.code === 'Comma') {
+        baseKey = ',';
+    }
+    else if (e.code === 'Period') {
+        baseKey = '.';
+    }
+    else if (e.code === 'Slash') {
+        baseKey = '/';
+    }
+    // Handle brackets and backslash
+    else if (e.code === 'BracketLeft') {
+        baseKey = '[';
+    }
+    else if (e.code === 'BracketRight') {
+        baseKey = ']';
+    }
+    else if (e.code === 'Backslash') {
+        baseKey = '\\';
+    }
+    // Handle quote and backtick
+    else if (e.code === 'Quote') {
+        baseKey = "'";
+    }
+    else if (e.code === 'Backquote') {
+        baseKey = '`';
+    }
+    // Handle minus and equal signs
+    else if (e.code === 'Minus') {
+        baseKey = '-';
+    }
+    else if (e.code === 'Equal') {
+        baseKey = '=';
+    }
+    // Fallback for other single character keys
+    else if (e.key && e.key.length === 1 && /^[a-zA-Z0-9`\-=\[\]\\;',./]$/.test(e.key)) {
+        baseKey = e.key.toUpperCase();
     }
     
     // Add the base key if we found one and it's not a modifier
